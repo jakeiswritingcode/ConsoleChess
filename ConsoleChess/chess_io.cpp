@@ -159,10 +159,10 @@ namespace {
 				<< WINDOW_MARGIN << "\"a\" or \"available\"\n"
 				<< WINDOW_MARGIN << "receive pieces with currently available moves\n"
 				<< "\n"
-				<< WINDOW_MARGIN << "\"ai white\"\n"
+				<< WINDOW_MARGIN << "\"ai-white\"\n"
 				<< WINDOW_MARGIN << "start new game with AI playing white\n"
 				<< "\n"
-				<< WINDOW_MARGIN << "\"ai black\"\n"
+				<< WINDOW_MARGIN << "\"ai-black\"\n"
 				<< WINDOW_MARGIN << "start new game with AI playing black\n"
 				<< "\n"
 				<< WINDOW_MARGIN << "\"reset\"\n"
@@ -311,7 +311,7 @@ namespace ChessIO {
 			vector<Piece::Position> selectedPieceMoves = { };
 			string boardString = generateBoardString(board);
 
-			string message = "Begin at your leisure. Enter help for a list of commands.";
+			string message = "Begin at your leisure. Enter 'help' for a list of commands.";
 			while (cin && !board.getAvailableMoves().empty()) {
 				if (ai && *ai == board.getCurrentTurn()) {
 					ChessAI::makeMove(board);
