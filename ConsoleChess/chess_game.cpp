@@ -12,7 +12,6 @@
 
 using std::vector;
 using std::tuple;
-using std::pair;
 
 
 
@@ -550,7 +549,7 @@ vector<Chess::Piece::Position> Chess::King::getMoves(const vector<Piece*>& piece
 }
 
 void Chess::Board::updateAvailableMoves() {
-    vector<pair<Piece::Position, Piece::Position>> result;
+    vector<Move> result;
     Piece* allyKing = nullptr;
     for (Piece* const& piece : pieces) {
         if (piece && piece->color == getCurrentTurn()) {
@@ -570,26 +569,26 @@ void Chess::Board::updateAvailableMoves() {
     }
     vector<Piece*> checkingPieces = static_cast<King*>(allyKing)->inCheck(pieces);
     if (checkingPieces.size() != 0) {
-        vector<pair<Piece::Position, Piece::Position>> checkResult;
+        vector<Move> checkResult;
         if (checkingPieces.size() == 1) {
             vector<Piece::Position> savingMoves = static_cast<King*>(allyKing)->getSavingMoves(checkingPieces[0]);
-            for (const auto& pair : result) {
-                if (pair.first == allyKing->position) {
-                    checkResult.push_back(pair);
+            for (const Move& move : result) {
+                if (move.from == allyKing->position) {
+                    checkResult.push_back(move);
                 }
                 else {
-                    for (const auto& move : savingMoves) {
-                        if (pair.second == move) {
-                            checkResult.push_back(pair);
+                    for (const Piece::Position& savingMove : savingMoves) {
+                        if (move.to == savingMove) {
+                            checkResult.push_back(move);
                         }
                     }
                 }
             }
         }
         else { // checkingPieces.size() > 1
-            for (const auto& pair : result) {
-                if (pair.first == allyKing->position) {
-                    checkResult.push_back(pair);
+            for (const auto& move : result) {
+                if (move.from == allyKing->position) {
+                    checkResult.push_back(move);
                 }
             }
         }
@@ -647,7 +646,7 @@ Chess::Piece::Color Chess::Board::getCurrentTurn() const {
     return *currentTurn;
 }
 
-vector<pair<Chess::Piece::Position, Chess::Piece::Position>> Chess::Board::getAvailableMoves() const {
+vector<Chess::Move> Chess::Board::getAvailableMoves() const {
     return availableMoves;
 }
 
@@ -706,8 +705,8 @@ bool Chess::Board::makeMove(const Piece::Position& from, const Piece::Position& 
     if (!Piece::Position::inBounds(from) || !Piece::Position::inBounds(to) || from == to) return false;
 
     bool moveIsAvailable = false;
-    for (const auto& availableMove : availableMoves) {
-        if (availableMove.first == from && availableMove.second == to) {
+    for (const Move& availableMove : availableMoves) {
+        if (availableMove.from == from && availableMove.to == to) {
             moveIsAvailable = true;
         }
     }
@@ -798,6 +797,6 @@ bool Chess::Board::makeMove(const Piece::Position& from, const Piece::Position& 
     return true;
 }
 
-bool Chess::Board::makeMove(const pair<Piece::Position, Piece::Position>& selectedMove) {
-    return makeMove(selectedMove.first, selectedMove.second);
+bool Chess::Board::makeMove(const Move& selectedMove) {
+    return makeMove(selectedMove.from, selectedMove.to);
 }

@@ -18,7 +18,6 @@ using std::cin;
 using std::cout;
 using std::string;
 using std::vector;
-using std::pair;
 using std::optional;
 using std::nullopt;
 using std::exception;
@@ -64,7 +63,7 @@ namespace {
 				grid[i][j] = (i + j) % 2 == 1 ? WHITE_SQUARE_CHAR : BLACK_SQUARE_CHAR;
 			}
 		}
-		for (const auto& move : selectedPieceMoves) {
+		for (const Piece::Position& move : selectedPieceMoves) {
 			int x = move.x - 'A';
 			int y = move.y - 1;
 			grid[x][y] = (x + y) % 2 == 1 ? WHITE_SQUARE_HIGHLIGHT_CHAR : BLACK_SQUARE_HIGHLIGHT_CHAR;
@@ -197,15 +196,15 @@ namespace {
 			message = "Moves are available for pieces on the following positions: ";
 
 			vector<Piece::Position> uniqueMovablePieces;
-			for (const auto& availableMove : availableMoves) {
+			for (const Move& availableMove : availableMoves) {
 				bool unique = true;
-				for (const auto& uniqueMovablePiece : uniqueMovablePieces) {
-					if (availableMove.first == uniqueMovablePiece) {
+				for (const Piece::Position& uniqueMovablePiece : uniqueMovablePieces) {
+					if (availableMove.from == uniqueMovablePiece) {
 						unique = false;
 					}
 				}
 				if (unique) {
-					uniqueMovablePieces.push_back(availableMove.first);
+					uniqueMovablePieces.push_back(availableMove.to);
 				}
 			}
 
@@ -258,7 +257,7 @@ namespace {
 
 		if (selectedPiece == nullopt) {
 			for (int moveIndex = 0; moveIndex < availableMoves.size() && selectedPiece == nullopt; ++moveIndex) {
-				if (availableMoves[moveIndex].first == inputPosition) {
+				if (availableMoves[moveIndex].from == inputPosition) {
 					selectedPiece = inputPosition;
 				}
 			}
@@ -286,12 +285,12 @@ namespace {
 		return false;
 	}
 
-	vector<Piece::Position> getSelectedPieceMoves(const optional<Piece::Position>& selectedPiece, const vector<pair<Piece::Position, Piece::Position>>& availableMoves) {
+	vector<Piece::Position> getSelectedPieceMoves(const optional<Piece::Position>& selectedPiece, const vector<Move>& availableMoves) {
 		vector<Piece::Position> result;
 		if (selectedPiece) {
-			for (const pair<Piece::Position, Piece::Position>& move : availableMoves) {
-				if (move.first == selectedPiece) {
-					result.push_back(move.second);
+			for (const Move& move : availableMoves) {
+				if (move.from == selectedPiece) {
+					result.push_back(move.to);
 				}
 			}
 		}

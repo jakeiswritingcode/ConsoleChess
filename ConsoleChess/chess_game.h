@@ -118,6 +118,12 @@ namespace Chess {
         std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
     };
 
+    struct Move
+    {
+        Piece::Position from;
+        Piece::Position to;
+    };
+
     class Board
     {
     private:
@@ -125,7 +131,7 @@ namespace Chess {
         std::vector<Piece*> pieces;
         std::vector<Piece::Color> turnOrder;
         std::vector<Piece::Color>::iterator currentTurn;
-        std::vector<std::pair<Piece::Position, Piece::Position>> availableMoves;
+        std::vector<Move> availableMoves;
 
         void updateAvailableMoves();
 
@@ -137,11 +143,11 @@ namespace Chess {
 
         std::vector<std::tuple<char, Piece::Color, Piece::Position>> getPieces() const;
         Piece::Color getCurrentTurn() const;
-        std::vector<std::pair<Piece::Position, Piece::Position>> getAvailableMoves() const;
+        std::vector<Move> getAvailableMoves() const;
 
         void setDefaultGame();
 
         bool makeMove(const Piece::Position& from, const Piece::Position& to);
-        bool makeMove(const std::pair<Piece::Position, Piece::Position>& selectedMove);
+        bool makeMove(const Move& selectedMove);
     };
 }
