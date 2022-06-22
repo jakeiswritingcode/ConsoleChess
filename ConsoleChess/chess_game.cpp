@@ -6,7 +6,6 @@
 #include "chess_game.h"
 #include <vector>
 #include <tuple>
-#include "chess_ai.h"
 
 
 
