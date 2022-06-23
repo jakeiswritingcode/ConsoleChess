@@ -11,6 +11,8 @@
 
 
 namespace Chess {
+    struct Board; // remove when Chess::Piece becomes a nested class
+
     struct Piece
     {
         virtual Piece* newCopy() const = 0;
@@ -60,25 +62,27 @@ namespace Chess {
         Color color;
         Position position;
         virtual char getNotation() const = 0;
-        virtual std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const = 0;
+        virtual std::vector<Position> getMoves(const Board& board) const = 0;
     };
 
     struct Pawn : public Piece
     {
         Pawn(Color color, Position position, bool enPassantCapturable = false);
         Piece* newCopy() const;
-        bool enPassantCapturable;
         char getNotation() const;
-        std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
+        std::vector<Position> getMoves(const Board& board) const;
+
+        bool enPassantCapturable;
     };
 
     struct Rook : public Piece
     {
         Rook(Color color, Position position, bool canCastle = true);
         Piece* newCopy() const;
-        bool canCastle = true;
         char getNotation() const;
-        std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
+        std::vector<Position> getMoves(const Board& board) const;
+
+        bool canCastle = true;
     };
 
     struct Knight : public Piece
@@ -86,7 +90,7 @@ namespace Chess {
         Knight(Color color, Position position);
         Piece* newCopy() const;
         char getNotation() const;
-        std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
+        std::vector<Position> getMoves(const Board& board) const;
     };
 
     struct Bishop : public Piece
@@ -94,7 +98,7 @@ namespace Chess {
         Bishop(Color color, Position position);
         Piece* newCopy() const;
         char getNotation() const;
-        std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
+        std::vector<Position> getMoves(const Board& board) const;
     };
 
     struct Queen : public Piece
@@ -102,20 +106,20 @@ namespace Chess {
         Queen(Color color, Position position);
         Piece* newCopy() const;
         char getNotation() const;
-        std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
+        std::vector<Position> getMoves(const Board& board) const;
     };
 
     struct King : public Piece
     {
-        King(Color color, Position position, bool canCastle = true);
+        King(Color color, Position position, bool canCastle = true, bool inCheck = false);
         Piece* newCopy() const;
-        bool canCastle = true;
         char getNotation() const;
 
-        static std::vector<Piece*> enemiesAttackingPosition(const Color& allyColor, const Position& position, const std::vector<Piece*>& pieces);
-        std::vector<Piece*> inCheck(const std::vector<Piece*>& pieces) const;
+        bool canCastle = true;
+        bool inCheck = false;
+
         std::vector<Position> getSavingMoves(Piece* checking);
-        std::vector<Position> getMoves(const std::vector<Piece*>& pieces) const;
+        std::vector<Position> getMoves(const Board& board) const;
     };
 
     struct Move
@@ -128,7 +132,6 @@ namespace Chess {
     {
     private:
 
-        std::vector<Piece*> pieces;
         std::vector<Piece::Color> turnOrder;
         std::vector<Piece::Color>::iterator currentTurn;
         std::vector<Move> availableMoves;
@@ -149,5 +152,10 @@ namespace Chess {
 
         bool makeMove(const Piece::Position& from, const Piece::Position& to);
         bool makeMove(const Move& selectedMove);
+
+        std::vector<Piece*> pieces; // move back to private after Chess::Piece is implemented as a nested class
+        std::vector<Piece*> positionUnderAttack(const Piece::Color& allyColor, const Piece::Position& position) const; // move back to private after Chess::Piece is implemented as a nested class
+        std::vector<Piece*> positionUnderAttack(const Piece& piece) const;// move back to private after Chess::Piece is implemented as a nested class
+        //std::vector<Piece*> inCheck(const std::vector<Piece*>& pieces) const; // 
     };
 }

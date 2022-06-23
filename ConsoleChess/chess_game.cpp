@@ -145,8 +145,9 @@ Chess::Piece* Chess::Pawn::newCopy() const {
 
 char Chess::Pawn::getNotation() const { return 'P'; }
 
-vector<Chess::Piece::Position> Chess::Pawn::getMoves(const vector<Piece*>& pieces) const {
+vector<Chess::Piece::Position> Chess::Pawn::getMoves(const Board& board) const {
     vector<Position> result;
+    auto pieces = board.pieces;// fix after Chess::Piece becomes a nested class
     Proximity proximity(position, pieces);
 
     Pin pin = getPinType(proximity);
@@ -273,8 +274,9 @@ Chess::Piece* Chess::Knight::newCopy() const {
 
 char Chess::Knight::getNotation() const { return 'N'; }
 
-vector<Chess::Piece::Position> Chess::Knight::getMoves(const vector<Piece*>& pieces) const {
+vector<Chess::Piece::Position> Chess::Knight::getMoves(const Board& board) const {
     vector<Position> result;
+    auto pieces = board.pieces; // fix after Chess::Piece becomes a nested class
     Proximity proximity(position, pieces);
     Pin pin = getPinType(proximity);
 
@@ -318,9 +320,9 @@ Chess::Piece* Chess::Bishop::newCopy() const {
 
 char Chess::Bishop::getNotation() const { return 'B'; }
 
-vector<Chess::Piece::Position> Chess::Bishop::getMoves(const vector<Piece*>& pieces) const {
+vector<Chess::Piece::Position> Chess::Bishop::getMoves(const Board& board) const {
     vector<Position> result;
-    Proximity proximity(position, pieces);
+    Proximity proximity(position, board.pieces); // fix after Chess::Piece becomes a nested class
     Pin pin = getPinType(proximity);
 
     addMovesFromPieceToLimit(result, *this, proximity.ne, pin, [](Position& p) { ++p.x; ++p.y; });
@@ -343,9 +345,9 @@ Chess::Piece* Chess::Rook::newCopy() const {
 
 char Chess::Rook::getNotation() const { return 'R'; }
 
-vector<Chess::Piece::Position> Chess::Rook::getMoves(const vector<Piece*>& pieces) const {
+vector<Chess::Piece::Position> Chess::Rook::getMoves(const Board& board) const {
     vector<Position> result;
-    Proximity proximity(position, pieces);
+    Proximity proximity(position, board.pieces); // fix after Chess::Piece becomes a nested class
     Pin pin = getPinType(proximity);
 
     addMovesFromPieceToLimit(result, *this, proximity.n, pin, [](Position& p) { ++p.y; });
@@ -367,9 +369,9 @@ Chess::Piece* Chess::Queen::newCopy() const {
 
 char Chess::Queen::getNotation() const { return 'Q'; }
 
-vector<Chess::Piece::Position> Chess::Queen::getMoves(const vector<Piece*>& pieces) const {
+vector<Chess::Piece::Position> Chess::Queen::getMoves(const Board& board) const {
     vector<Position> result;
-    Proximity proximity(position, pieces);
+    Proximity proximity(position, board.pieces); // fix after Chess::Piece becomes a nested class
     Pin pin = getPinType(proximity);
 
     addMovesFromPieceToLimit(result, *this, proximity.n, pin, [](Position& p) { ++p.y; });
@@ -384,68 +386,18 @@ vector<Chess::Piece::Position> Chess::Queen::getMoves(const vector<Piece*>& piec
     return result;
 }
 
-Chess::King::King(Color color, Position position, bool canCastle) {
+Chess::King::King(Color color, Position position, bool canCastle, bool inCheck) {
     this->color = color;
     this->position = position;
     this->canCastle = canCastle;
+    this->inCheck = inCheck;
 }
 
 Chess::Piece* Chess::King::newCopy() const {
-    return new King(color, position, canCastle);
+    return new King(color, position, canCastle, inCheck);
 }
 
 char Chess::King::getNotation() const { return 'K'; }
-
-vector<Chess::Piece*> Chess::King::enemiesAttackingPosition(const Color& allyColor, const Position& position, const vector<Piece*>& pieces) {
-    vector<Piece*> result;
-
-    Proximity proximity(position, pieces);
-
-    // check for pawns
-    if (allyColor == Color::white) {
-        if (proximity.ne && proximity.ne->getNotation() == 'P' && proximity.ne->color != allyColor && proximity.ne->position.x == position.x + 1) result.push_back(proximity.ne);
-        if (proximity.nw && proximity.nw->getNotation() == 'P' && proximity.nw->color != allyColor && proximity.nw->position.x == position.x - 1) result.push_back(proximity.nw);
-    }
-    else { // color == Color::black
-        if (proximity.se && proximity.se->getNotation() == 'P' && proximity.se->color != allyColor && proximity.se->position.x == position.x + 1) result.push_back(proximity.se);
-        if (proximity.sw && proximity.sw->getNotation() == 'P' && proximity.sw->color != allyColor && proximity.sw->position.x == position.x - 1) result.push_back(proximity.sw);
-    }
-
-    // check for knights
-    vector<Position> possibleKnightMoves = {
-        Position{char(position.x + 1), position.y + 2},
-        Position{char(position.x + 2), position.y + 1},
-        Position{char(position.x + 2), position.y - 1},
-        Position{char(position.x + 1), position.y - 2},
-        Position{char(position.x - 1), position.y - 2},
-        Position{char(position.x - 2), position.y - 1},
-        Position{char(position.x - 2), position.y + 1},
-        Position{char(position.x - 1), position.y + 2}
-    };
-    for (Piece* const& piece : pieces) {
-        if (piece && piece->getNotation() == 'N' && piece->color != allyColor) {
-            for (const Position& possibleKnightMove : possibleKnightMoves) {
-                if (piece->position == possibleKnightMove) result.push_back(piece);
-            }
-        }
-    }
-
-    // check for rooks, bishops, queens, and kings
-    if (proximity.n && (proximity.n->getNotation() == 'R' || proximity.n->getNotation() == 'Q' || (proximity.n->getNotation() == 'K' && proximity.n->position.y == position.y + 1)) && proximity.n->color != allyColor) result.push_back(proximity.n);
-    if (proximity.e && (proximity.e->getNotation() == 'R' || proximity.e->getNotation() == 'Q' || (proximity.e->getNotation() == 'K' && proximity.e->position.y == position.x + 1)) && proximity.e->color != allyColor) result.push_back(proximity.e);
-    if (proximity.s && (proximity.s->getNotation() == 'R' || proximity.s->getNotation() == 'Q' || (proximity.s->getNotation() == 'K' && proximity.s->position.y == position.y - 1)) && proximity.s->color != allyColor) result.push_back(proximity.s);
-    if (proximity.w && (proximity.w->getNotation() == 'R' || proximity.w->getNotation() == 'Q' || (proximity.w->getNotation() == 'K' && proximity.w->position.y == position.x - 1)) && proximity.w->color != allyColor) result.push_back(proximity.w);
-    if (proximity.ne && (proximity.ne->getNotation() == 'B' || proximity.ne->getNotation() == 'Q' || (proximity.ne->getNotation() == 'K' && proximity.ne->position.x == position.x + 1)) && proximity.ne->color != allyColor) result.push_back(proximity.ne);
-    if (proximity.se && (proximity.se->getNotation() == 'B' || proximity.se->getNotation() == 'Q' || (proximity.se->getNotation() == 'K' && proximity.se->position.x == position.x + 1)) && proximity.se->color != allyColor) result.push_back(proximity.se);
-    if (proximity.sw && (proximity.sw->getNotation() == 'B' || proximity.sw->getNotation() == 'Q' || (proximity.sw->getNotation() == 'K' && proximity.sw->position.x == position.x + 1)) && proximity.sw->color != allyColor) result.push_back(proximity.sw);
-    if (proximity.nw && (proximity.nw->getNotation() == 'B' || proximity.nw->getNotation() == 'Q' || (proximity.nw->getNotation() == 'K' && proximity.nw->position.x == position.x + 1)) && proximity.nw->color != allyColor) result.push_back(proximity.nw);
-
-    return result;
-}
-
-vector<Chess::Piece*> Chess::King::inCheck(const vector<Piece*>& pieces) const {
-    return enemiesAttackingPosition(color, position, pieces);
-}
 
 vector<Chess::Piece::Position> Chess::King::getSavingMoves(Piece* checking) {
     vector<Piece::Position> result;
@@ -484,8 +436,9 @@ vector<Chess::Piece::Position> Chess::King::getSavingMoves(Piece* checking) {
     return result;
 }
 
-vector<Chess::Piece::Position> Chess::King::getMoves(const vector<Piece*>& pieces) const {
+vector<Chess::Piece::Position> Chess::King::getMoves(const Board& board) const {
     vector<Position> result;
+    auto pieces = board.pieces; // fix after Chess::Piece becomes a nested class
     Proximity proximity(position, pieces);
     vector<Position> possibleKingMoves = {
         Position{char(position.x + 1), position.y + 1},
@@ -506,14 +459,14 @@ vector<Chess::Piece::Position> Chess::King::getMoves(const vector<Piece*>& piece
                         samePosition = pieces[i];
                     }
                 }
-                if ((!samePosition || samePosition->color != color) && enemiesAttackingPosition(color, nextMove, pieces).empty()) {
+                if ((!samePosition || samePosition->color != color) && board.positionUnderAttack(color, nextMove).empty()) {
                     result.push_back(nextMove);
                 }
             }
         }
     }
     // castling
-    if (canCastle && inCheck(pieces).empty()) {
+    if (canCastle && !inCheck) {
         bool leftPathClear = true;
         bool rightPathClear = true;
         for (Piece* const& piece : pieces) {
@@ -530,13 +483,13 @@ vector<Chess::Piece::Position> Chess::King::getMoves(const vector<Piece*>& piece
             if (piece && piece->getNotation() == 'R' && piece->color == color && static_cast<Rook*>(piece)->canCastle) {
                 if (leftPathClear && piece->position == Position{ 1, position.y }) {
                     Position leftCastle = Position{ char(position.x - 2), position.y };
-                    if (enemiesAttackingPosition(color, Position{ char(position.x - 1), position.y }, pieces).empty() && enemiesAttackingPosition(color, leftCastle, pieces).empty()) {
+                    if (board.positionUnderAttack(color, Position{ char(position.x - 1), position.y }).empty() && board.positionUnderAttack(color, leftCastle).empty()) {
                         result.push_back(leftCastle);
                     }
                 }
                 else if (rightPathClear && piece->position == Position{ 8, position.y }) {
                     Position rightCastle = Position{ char(position.x + 2), position.y };
-                    if (enemiesAttackingPosition(color, Position{ char(position.x + 1), position.y }, pieces).empty() && enemiesAttackingPosition(color, rightCastle, pieces).empty()) {
+                    if (board.positionUnderAttack(color, Position{ char(position.x + 1), position.y }).empty() && board.positionUnderAttack(color, rightCastle).empty()) {
                         result.push_back(rightCastle);
                     }
                 }
@@ -547,13 +500,64 @@ vector<Chess::Piece::Position> Chess::King::getMoves(const vector<Piece*>& piece
     return result;
 }
 
+std::vector<Chess::Piece*> Chess::Board::positionUnderAttack(const Piece::Color& allyColor, const Piece::Position& position) const { // instead, generate a board copy without an optional piece that generates all enemy moves
+    vector<Piece*> result;
+
+    Piece::Proximity proximity(position, pieces);
+
+    // check for pawns
+    if (allyColor == Piece::Color::white) {
+        if (proximity.ne && proximity.ne->getNotation() == 'P' && proximity.ne->color != allyColor && proximity.ne->position.x == position.x + 1) result.push_back(proximity.ne);
+        if (proximity.nw && proximity.nw->getNotation() == 'P' && proximity.nw->color != allyColor && proximity.nw->position.x == position.x - 1) result.push_back(proximity.nw);
+    }
+    else { // color == Color::black
+        if (proximity.se && proximity.se->getNotation() == 'P' && proximity.se->color != allyColor && proximity.se->position.x == position.x + 1) result.push_back(proximity.se);
+        if (proximity.sw && proximity.sw->getNotation() == 'P' && proximity.sw->color != allyColor && proximity.sw->position.x == position.x - 1) result.push_back(proximity.sw);
+    }
+
+    // check for knights
+    vector<Piece::Position> possibleKnightMoves = {
+        Piece::Position{char(position.x + 1), position.y + 2},
+        Piece::Position{char(position.x + 2), position.y + 1},
+        Piece::Position{char(position.x + 2), position.y - 1},
+        Piece::Position{char(position.x + 1), position.y - 2},
+        Piece::Position{char(position.x - 1), position.y - 2},
+        Piece::Position{char(position.x - 2), position.y - 1},
+        Piece::Position{char(position.x - 2), position.y + 1},
+        Piece::Position{char(position.x - 1), position.y + 2}
+    };
+    for (Piece* const& piece : pieces) {
+        if (piece && piece->getNotation() == 'N' && piece->color != allyColor) {
+            for (const Piece::Position& possibleKnightMove : possibleKnightMoves) {
+                if (piece->position == possibleKnightMove) result.push_back(piece);
+            }
+        }
+    }
+
+    // check for rooks, bishops, queens, and kings
+    if (proximity.n && (proximity.n->getNotation() == 'R' || proximity.n->getNotation() == 'Q' || (proximity.n->getNotation() == 'K' && proximity.n->position.y == position.y + 1)) && proximity.n->color != allyColor) result.push_back(proximity.n);
+    if (proximity.e && (proximity.e->getNotation() == 'R' || proximity.e->getNotation() == 'Q' || (proximity.e->getNotation() == 'K' && proximity.e->position.y == position.x + 1)) && proximity.e->color != allyColor) result.push_back(proximity.e);
+    if (proximity.s && (proximity.s->getNotation() == 'R' || proximity.s->getNotation() == 'Q' || (proximity.s->getNotation() == 'K' && proximity.s->position.y == position.y - 1)) && proximity.s->color != allyColor) result.push_back(proximity.s);
+    if (proximity.w && (proximity.w->getNotation() == 'R' || proximity.w->getNotation() == 'Q' || (proximity.w->getNotation() == 'K' && proximity.w->position.y == position.x - 1)) && proximity.w->color != allyColor) result.push_back(proximity.w);
+    if (proximity.ne && (proximity.ne->getNotation() == 'B' || proximity.ne->getNotation() == 'Q' || (proximity.ne->getNotation() == 'K' && proximity.ne->position.x == position.x + 1)) && proximity.ne->color != allyColor) result.push_back(proximity.ne);
+    if (proximity.se && (proximity.se->getNotation() == 'B' || proximity.se->getNotation() == 'Q' || (proximity.se->getNotation() == 'K' && proximity.se->position.x == position.x + 1)) && proximity.se->color != allyColor) result.push_back(proximity.se);
+    if (proximity.sw && (proximity.sw->getNotation() == 'B' || proximity.sw->getNotation() == 'Q' || (proximity.sw->getNotation() == 'K' && proximity.sw->position.x == position.x + 1)) && proximity.sw->color != allyColor) result.push_back(proximity.sw);
+    if (proximity.nw && (proximity.nw->getNotation() == 'B' || proximity.nw->getNotation() == 'Q' || (proximity.nw->getNotation() == 'K' && proximity.nw->position.x == position.x + 1)) && proximity.nw->color != allyColor) result.push_back(proximity.nw);
+
+    return result;
+}
+
+std::vector<Chess::Piece*> Chess::Board::positionUnderAttack(const Piece& piece) const {
+    return positionUnderAttack(piece.color, piece.position);
+}
+
 void Chess::Board::updateAvailableMoves() {
     vector<Move> result;
     Piece* allyKing = nullptr;
     for (Piece* const& piece : pieces) {
         if (piece && piece->color == getCurrentTurn()) {
             Piece::Position from = piece->position;
-            vector<Piece::Position> tos = piece->getMoves(pieces);
+            vector<Piece::Position> tos = piece->getMoves(*this);
             for (const Piece::Position& to : tos) {
                 result.push_back({ from, to });
             }
@@ -566,7 +570,8 @@ void Chess::Board::updateAvailableMoves() {
         availableMoves = { };
         return;
     }
-    vector<Piece*> checkingPieces = static_cast<King*>(allyKing)->inCheck(pieces);
+    vector<Piece*> checkingPieces = positionUnderAttack(*static_cast<King*>(allyKing));
+    static_cast<King*>(allyKing)->inCheck = !checkingPieces.empty();
     if (checkingPieces.size() != 0) {
         vector<Move> checkResult;
         if (checkingPieces.size() == 1) {
@@ -726,6 +731,9 @@ bool Chess::Board::makeMove(const Piece::Position& from, const Piece::Position& 
     for (Piece*& piece : pieces) {
         if (piece && piece->getNotation() == 'P') {
             static_cast<Pawn*>(piece)->enPassantCapturable = false;
+        }
+        if (piece && piece->getNotation() == 'K') { // not friendly to games of more than two players, what if one opponent had just put another in check?
+            static_cast<King*>(piece)->inCheck = false;
         }
     }
 
