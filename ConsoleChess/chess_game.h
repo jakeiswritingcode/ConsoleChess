@@ -17,7 +17,7 @@ namespace Chess {
     {
         virtual Piece* newCopy() const = 0;
 
-        enum Color { white, black };
+        enum class Color { white, black };
 
         struct Position
         {
@@ -52,7 +52,7 @@ namespace Chess {
             Proximity(const Piece::Position& position, const std::vector<Piece*>& pieces);
         };
 
-        enum Pin { none, vertical, horizontal, mainDiagonal, antidiagonal };
+        enum class Pin { none, vertical, horizontal, mainDiagonal, antidiagonal };
         bool isPinned(const Piece& side1, const Piece& side2) const;
         Pin getPinType(const Proximity& proximity) const;
         static bool conformsToPin(const Piece::Position& nextMove, const Piece::Position& currentPosition, const Piece::Pin& pin);
