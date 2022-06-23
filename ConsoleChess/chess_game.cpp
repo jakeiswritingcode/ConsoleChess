@@ -654,6 +654,14 @@ vector<Chess::Move> Chess::Board::getAvailableMoves() const {
     return availableMoves;
 }
 
+bool Chess::Board::kingInCheck(Piece::Color kingColor) const {
+    for (auto& piece : pieces) {
+        if (piece->getNotation() == 'K' && piece->color == kingColor) {
+            return static_cast<King*>(piece)->inCheck;
+        }
+    }
+}
+
 void Chess::Board::setDefaultGame() {
     turnOrder = {
         Piece::Color::white,

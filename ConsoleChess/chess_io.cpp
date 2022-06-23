@@ -337,8 +337,13 @@ namespace ChessIO {
 			}
 
 			printHeader();
-			if (board.getCurrentTurn() == Piece::Color::white) cout << WINDOW_MARGIN << "Black Wins!" << "\n\n";
-			else cout << WINDOW_MARGIN << "White Wins!" << "\n\n";
+			if (board.kingInCheck(board.getCurrentTurn())) {
+				if (board.getCurrentTurn() == Piece::Color::white) cout << WINDOW_MARGIN << "Black Wins!" << "\n\n";
+				else cout << WINDOW_MARGIN << "White Wins!" << "\n\n";
+			}
+			else {
+				cout << WINDOW_MARGIN << "Stalemate!" << "\n\n";
+			}
 			cout << boardString;
 			printMessage("Thanks for playing!");
 			cout << WINDOW_MARGIN << "Press enter to start a new game." << "\n\n"

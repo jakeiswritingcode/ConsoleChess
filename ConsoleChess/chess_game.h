@@ -147,6 +147,7 @@ namespace Chess {
         std::vector<std::tuple<char, Piece::Color, Piece::Position>> getPieces() const;
         Piece::Color getCurrentTurn() const;
         std::vector<Move> getAvailableMoves() const;
+        bool kingInCheck(Piece::Color kingColor) const;
 
         void setDefaultGame();
 
