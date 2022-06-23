@@ -204,7 +204,7 @@ namespace {
 					}
 				}
 				if (unique) {
-					uniqueMovablePieces.push_back(availableMove.to);
+					uniqueMovablePieces.push_back(availableMove.from);
 				}
 			}
 
