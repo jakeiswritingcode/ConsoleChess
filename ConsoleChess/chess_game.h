@@ -11,7 +11,7 @@
 
 
 namespace Chess {
-    class Board; // remove when Chess::Piece becomes a nested class
+    class Board;
 
     struct Piece
     {
@@ -148,15 +148,14 @@ namespace Chess {
         Piece::Color getCurrentTurn() const;
         std::vector<Move> getAvailableMoves() const;
         bool kingInCheck(Piece::Color kingColor) const;
+        bool pieceToCaptureInCheck(const Piece::Color&) const;
 
         void setDefaultGame();
 
-        bool makeMove(const Piece::Position& from, const Piece::Position& to);
-        bool makeMove(const Move& selectedMove);
+        bool makeMove(const int&);
 
-        std::vector<Piece*> pieces; // move back to private after Chess::Piece is implemented as a nested class
-        std::vector<Piece*> positionUnderAttack(const Piece::Color& allyColor, const Piece::Position& position) const; // move back to private after Chess::Piece is implemented as a nested class
-        std::vector<Piece*> positionUnderAttack(const Piece& piece) const;// move back to private after Chess::Piece is implemented as a nested class
-        //std::vector<Piece*> inCheck(const std::vector<Piece*>& pieces) const; // 
+        std::vector<Piece*> pieces;
+        std::vector<Piece*> positionUnderAttack(const Piece::Color& allyColor, const Piece::Position& position) const;
+        std::vector<Piece*> positionUnderAttack(const Piece& piece) const;
     };
 }

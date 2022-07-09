@@ -274,7 +274,16 @@ namespace {
 			}
 		}
 
-		bool moveSuccessful = board.makeMove(*selectedPiece, inputPosition);
+		vector<Move> moves = board.getAvailableMoves();
+		int moveIndex = -1;
+		for (int i = 0; i < moves.size(); ++i) {
+			if (*selectedPiece == moves[i].from && inputPosition == moves[i].to) moveIndex = i;
+		}
+
+		bool moveSuccessful = false;
+		if (moveIndex != -1) {
+			moveSuccessful = board.makeMove(moveIndex);
+		}
 		if (moveSuccessful) {
 			selectedPiece = nullopt;
 			message = "Move complete.";
@@ -337,7 +346,7 @@ namespace ChessIO {
 			}
 
 			printHeader();
-			if (board.kingInCheck(board.getCurrentTurn())) {
+			if (board.pieceToCaptureInCheck(board.getCurrentTurn())) {
 				if (board.getCurrentTurn() == Piece::Color::white) cout << WINDOW_MARGIN << "Black Wins!" << "\n\n";
 				else cout << WINDOW_MARGIN << "White Wins!" << "\n\n";
 			}

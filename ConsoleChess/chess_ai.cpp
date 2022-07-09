@@ -19,12 +19,12 @@ using namespace Chess;
 
 
 namespace {
-	Move selectRandomMove(const vector<Move>& availableMoves) {
+	int selectRandomMove(const vector<Move>& availableMoves) {
 		random_device rd; // used to obtain a seed for the random number engine
 		mt19937 mt(rd()); // mersenne_twister_engine seeded with rd()
 		uniform_int_distribution<> moveDistribution(0, availableMoves.size() - 1);
 
-		return availableMoves[moveDistribution(mt)];
+		return moveDistribution(mt);
 	}
 
 	// for Q: helper functions go here
@@ -35,7 +35,7 @@ namespace ChessAI {
 		vector<Move> availableMoves = board.getAvailableMoves();
 
 		// for Q: determine best move here
-		Move selectedMove = selectRandomMove(availableMoves);
+		int selectedMove = selectRandomMove(availableMoves);
 		
 		board.makeMove(selectedMove);
 	}

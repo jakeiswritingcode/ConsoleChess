@@ -713,18 +713,25 @@ void Chess::Board::setDefaultGame() {
     updateAvailableMoves();
 }
 
-bool Chess::Board::makeMove(const Piece::Position& from, const Piece::Position& to) {
-    if (!Piece::Position::inBounds(from) || !Piece::Position::inBounds(to) || from == to) return false;
-
-    bool moveIsAvailable = false;
-    for (const Move& availableMove : availableMoves) {
-        if (availableMove.from == from && availableMove.to == to) {
-            moveIsAvailable = true;
+bool Chess::Board::pieceToCaptureInCheck(const Piece::Color& color) const {
+    Piece* pieceToCapture = nullptr;
+    for (Piece* const& piece : pieces) {
+        if (piece && piece->color == color && piece->getNotation() == 'K') {
+            if (!pieceToCapture) pieceToCapture = piece;
+            else return false;
         }
     }
-    if (!moveIsAvailable) {
+    if (!pieceToCapture) {
         return false;
     }
+    return positionUnderAttack(*pieceToCapture).empty();
+}
+
+bool Chess::Board::makeMove(const int& moveIndex) {
+    if (moveIndex < 0 || moveIndex > availableMoves.size() - 1) return false;
+    Move move = availableMoves[moveIndex];
+    Piece::Position from = move.from;
+    Piece::Position to = move.to;
 
     int f = -1; // from piece index
     int t = -1; // to piece index
@@ -740,7 +747,7 @@ bool Chess::Board::makeMove(const Piece::Position& from, const Piece::Position& 
         if (piece && piece->getNotation() == 'P') {
             static_cast<Pawn*>(piece)->enPassantCapturable = false;
         }
-        if (piece && piece->getNotation() == 'K') { // not friendly to games of more than two players, what if one opponent had just put another in check?
+        if (piece && piece->getNotation() == 'K') {
             static_cast<King*>(piece)->inCheck = false;
         }
     }
@@ -810,8 +817,4 @@ bool Chess::Board::makeMove(const Piece::Position& from, const Piece::Position& 
     updateAvailableMoves();
 
     return true;
-}
-
-bool Chess::Board::makeMove(const Move& selectedMove) {
-    return makeMove(selectedMove.from, selectedMove.to);
 }
