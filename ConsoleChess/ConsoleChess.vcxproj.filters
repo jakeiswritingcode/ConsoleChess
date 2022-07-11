@@ -27,6 +27,9 @@
     <ClCompile Include="ConsoleChess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="chess_networking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chess_ai.h">

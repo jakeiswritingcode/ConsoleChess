@@ -78,6 +78,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\asio-1.22.1\include;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -143,6 +144,7 @@
     <ClCompile Include="chess_ai.cpp" />
     <ClCompile Include="chess_game.cpp" />
     <ClCompile Include="chess_io.cpp" />
+    <ClCompile Include="chess_networking.cpp" />
     <ClCompile Include="ConsoleChess.cpp" />
   </ItemGroup>
   <ItemGroup>
