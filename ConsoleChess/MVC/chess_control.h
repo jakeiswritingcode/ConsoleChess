@@ -1,9 +1,9 @@
-// chess_io.h
+// chess_control.h
 // by Jake Charles Osborne III
 #pragma once
 
 
 
-namespace ChessIO {
+namespace Chess {
 	void play();
 }

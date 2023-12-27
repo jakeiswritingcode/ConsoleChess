@@ -2,8 +2,6 @@
 // by Jake Charles Osborne III
 #pragma once
 
-
-
 #include <vector>
 #include <string>
 #include <functional>
@@ -19,10 +17,6 @@ namespace Chess {
 
     struct Piece
     {
-    protected:
-
-        static std::vector<Piece*> getPieces(const Board&);
-
     public:
 
         virtual Piece* newCopy() const = 0;
@@ -46,14 +40,27 @@ namespace Chess {
             static bool sameMainDiagonal(const Position& position1, const Position& position2);
             static bool sameAntidiagonal(const Position& position1, const Position& position2);
             static bool inBounds(const Position& position);
-            static bool heldByAlly(const Position& position, const Color& allyColor, const Board& board);
+            static std::optional<Chess::Piece::Color> heldBy(const Position& position, const Board& board);
+
         };
 
         virtual std::vector<std::vector<Move>> getMoves(const Chess::Board&) = 0;
 
         Color color;
         Position position;
+        std::optional<std::function<void()>> updateEffect = std::nullopt;
         virtual char getNotation() const = 0;
+
+    protected:
+
+        static std::vector<Piece*> getPieces(const Board&);
+
+        std::vector<std::vector<Move>> generateMovesWithPattern(
+            const std::vector<Position>& pattern,
+            const Board& board);
+        std::vector<std::vector<Move>> generateMovesWithPattern(
+            const std::vector<std::function<Position(Position)>>& pattern,
+            const Board& board);
     };
 
     struct Pawn : public Piece
