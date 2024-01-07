@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 #include <string>
 #include <tuple>
 #include <optional>
@@ -19,6 +20,7 @@
 using std::cin;
 using std::string;
 using std::vector;
+using std::unordered_set;
 using std::optional;
 using std::nullopt;
 using std::exception;
@@ -178,11 +180,36 @@ namespace {
 			}
 		}
 		if (input.size() == 3 && isalpha(input[0]) && input[1] == 'x' && isalpha(input[2])) {
+			unordered_set<Piece::Position> possibleFroms;
+			unordered_set<Piece::Position> possibleTos;
 			for (const auto& [notation, color, position] : board.getPieces()) {
+				if (tolower(notation) == input[0]) possibleFroms.emplace(position);
+				if (tolower(notation) == input[2]) possibleTos.emplace(position);
+			}
 
-				if (input.) {
-
+			optional<int> requestedMoveIndex = nullopt;
+			for (int i = 0; i < availableMoves.size(); ++i) {
+				if (possibleFroms.find(availableMoves[i].from) != possibleFroms.end() &&
+					possibleTos.find(availableMoves[i].to) != possibleTos.end())
+				{
+					if (!requestedMoveIndex) requestedMoveIndex = i;
+					else {
+						message = "Multiple pieces of type [" + string(1, input[0]) +
+							"] can capture a piece of type [" + string(1, input[2]) + "].";
+						return false;
+					}
 				}
+			}
+			if (requestedMoveIndex) {
+				board.makeMove(*requestedMoveIndex);
+				selectedPiece = nullopt;
+				message = "Move complete.";
+				return true;
+			}
+			message = "Requested move not found.";
+			return false;
+			for (auto possibleFrom : possibleFroms) {
+
 			}
 		}
 
