@@ -50,6 +50,30 @@ namespace {
 			}
 		}
 
+		if (input == "ai-white") {
+			board.setDefaultGame();
+			selectedPiece = nullopt;
+			ai = Piece::Color::white;
+			message = "AI enabled as white player.";
+			return true;
+		}
+
+		if (input == "ai-black") {
+			board.setDefaultGame();
+			selectedPiece = nullopt;
+			message = "AI enabled as black player.";
+			ai = Piece::Color::black;
+			return true;
+		}
+
+		if (input == "reset") {
+			board.setDefaultGame();
+			selectedPiece = nullopt;
+			message = "Game reset.";
+			ai = nullopt;
+			return true;
+		}
+
 		auto availableMoves = board.getAvailableMoves();
 		if (input == "a" || input == "available") {
 			message = "Moves are available for pieces on the following positions: ";
@@ -76,28 +100,90 @@ namespace {
 			return false;
 		}
 
-		if (input == "ai-white") {
-			board.setDefaultGame();
-			selectedPiece = nullopt;
-			ai = Piece::Color::white;
-			message = "AI enabled as white player.";
-			return true;
-		}
+		// algebraic notation
+		if (input == "oo") {
+			optional<Piece::Position> kingPosition = nullopt;
+			for (const auto& [notation, color, position] : board.getPieces()) {
+				if (notation == 'K') {
+					if (!kingPosition) kingPosition = position;
+					else {
+						message = "Multiple kings detected.";
+						return false;
 
-		if (input == "ai-black") {
-			board.setDefaultGame();
-			selectedPiece = nullopt;
-			message = "AI enabled as black player.";
-			ai = Piece::Color::black;
-			return true;
+					}
+				}
+			}
+			if (kingPosition) {
+				for (int i = 0; i < availableMoves.size(); ++i) {
+					if (availableMoves[i].from == *kingPosition && availableMoves[i].to.x == kingPosition->x + 2) {
+						board.makeMove(i);
+						selectedPiece = nullopt;
+						message = "Move complete.";
+						return true;
+					}
+				}
+				message = "Move invalid.";
+				return false;
+			}
 		}
+		if (input == "ooo") {
+			optional<Piece::Position> kingPosition = nullopt;
+			for (const auto& [notation, color, position] : board.getPieces()) {
+				if (notation == 'K') {
+					if (!kingPosition) kingPosition = position;
+					else {
+						message = "Multiple kings detected.";
+						return false;
 
-		if (input == "reset") {
-			board.setDefaultGame();
-			selectedPiece = nullopt;
-			message = "Game reset.";
-			ai = nullopt;
-			return true;
+					}
+				}
+			}
+			if (kingPosition) {
+				for (int i = 0; i < availableMoves.size(); ++i) {
+					if (availableMoves[i].from == *kingPosition && availableMoves[i].to.x == kingPosition->x - 2) {
+						board.makeMove(i);
+						selectedPiece = nullopt;
+						message = "Move complete.";
+						return true;
+					}
+				}
+				message = "Move invalid.";
+				return false;
+		}
+		if (input.size() == 3 && isalpha(input[0]) && isalpha(input[1]) && isdigit(input[2])) {
+			optional<int> requestedMoveIndex = nullopt;
+			for (const auto& [notation, color, position] : board.getPieces()) {
+				for (int i = 0; i < availableMoves.size(); ++i) {
+					if (
+						tolower(notation) == input[0] &&
+						availableMoves[i].from == position &&
+						availableMoves[i].to.x == input[1] &&
+						availableMoves[i].to.y == input[2]
+					) {
+						if (!requestedMoveIndex) requestedMoveIndex = i;
+						else {
+							message = "Multiple pieces of the provided type can move to that position.";
+							return false;
+						}
+					}
+					if (requestedMoveIndex) {
+						board.makeMove(*requestedMoveIndex);
+						selectedPiece = nullopt;
+						message = "Move complete.";
+						return true;
+					}
+					message = "Requested move not found.";
+					return false;
+				}
+			}
+		}
+		if (input.size() == 3 && isalpha(input[0]) && input[1] == 'x' && isalpha(input[2])) {
+			for (const auto& [notation, color, position] : board.getPieces()) {
+
+				if (input.) {
+
+				}
+			}
 		}
 
 		if (input.size() != 2 || !isalpha(input[0]) || !isdigit(input[1])) {
@@ -141,9 +227,7 @@ namespace {
 
 		bool moveSuccessful = false;
 		if (moveIndex != -1) {
-			moveSuccessful = board.makeMove(moveIndex);
-		}
-		if (moveSuccessful) {
+			board.makeMove(moveIndex);
 			selectedPiece = nullopt;
 			message = "Move complete.";
 			return true;
@@ -206,7 +290,7 @@ namespace Chess {
 			printHeader();
 			if (board.pieceToCaptureInCheck(board.getCurrentTurn())) {
 				if (board.getCurrentTurn() == Piece::Color::white) printMessage("Black Wins!");
-				else printMessage("White Wins!");
+				else /*board.getCurrentTurn() == Piece::Color::black*/ printMessage("White Wins!");
 			}
 			else {
 				printMessage("Stalemate!");

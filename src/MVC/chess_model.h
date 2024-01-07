@@ -2,6 +2,9 @@
 // by Jake Charles Osborne III
 #pragma once
 
+
+
+
 #include <vector>
 #include <string>
 #include <functional>
@@ -162,7 +165,7 @@ namespace Chess {
         std::unordered_set<Piece::Position>getPositionsUnderAttack() const;
         bool pieceToCaptureInCheck(const Piece::Color&) const;
 
-        bool makeMove(const int& selectedMove);
+        void makeMove(const int& selectedMove);
 
         friend struct Piece;
 

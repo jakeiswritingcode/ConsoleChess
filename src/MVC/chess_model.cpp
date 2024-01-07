@@ -115,11 +115,8 @@ vector<vector<Chess::Move>> Chess::Pawn::getMoves(const Board& board) {
     }
     else throw std::exception("nonstandard pawn color not implemented");
 
-    function<void()> pawnMoveEffect;
+    function<void()> pawnMoveEffect = [&]() { firstMove = false; };
     if (Position::inBounds(forward) && !Position::inBounds(doubleStep)) {
-        pawnMoveEffect = [&]() { firstMove = false; };
-    }
-    else {
         pawnMoveEffect = [&]() {
             Piece* promotion;
             for (auto piece : getPieces(board)) {
@@ -569,8 +566,6 @@ Chess::Board::Board(const Board& board) {
     updateAvailableMoves();
 }
 
-
-
 Chess::Board::Board(const Board& board, const Piece*& removedPiece) {
     for (auto piece : board.pieces) {
         if (piece && piece != removedPiece) pieces.push_back(piece->newCopy());
@@ -670,8 +665,7 @@ vector<Chess::Move> Chess::Board::getAvailableMoves() const {
     return availableMoves;
 }
 
-bool Chess::Board::makeMove(const int& moveIndex) { //  TODO: am I not ok with exceptions being thrown?? how would you even recover if the argument was wrong??
-    if (moveIndex < 0 || moveIndex > availableMoves.size() - 1) return false;
+void Chess::Board::makeMove(const int& moveIndex) {
     Move move = availableMoves[moveIndex];
 
     int f = -1; // from piece index
@@ -682,7 +676,6 @@ bool Chess::Board::makeMove(const int& moveIndex) { //  TODO: am I not ok with e
             if (pieces[i]->position == move.to) t = i;
         }
     }
-    if (f == -1) return false;
 
     pieces[f]->position = move.to;
     if (t != -1) {
@@ -699,6 +692,4 @@ bool Chess::Board::makeMove(const int& moveIndex) { //  TODO: am I not ok with e
     }
 
     updateAvailableMoves();
-
-    return true;
 }
