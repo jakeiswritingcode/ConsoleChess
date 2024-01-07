@@ -5,7 +5,6 @@
 
 #include "chess_model.h"
 #include <vector>
-#include <unordered_map>
 #include <unordered_set>
 #include <functional>
 #include <optional>
@@ -14,7 +13,6 @@
 #include <exception>
 
 using std::vector;
-using std::unordered_map;
 using std::unordered_set;
 using std::function;
 using std::optional;
@@ -330,7 +328,7 @@ vector<vector<Chess::Move>> Chess::King::getMoves(const Board& board) {
         },
         board);
 
-    function<void()> kingMoveEffect = [&]() { canCastle = false; }; // TODO: generateMovesWithPattern argument? default value replaced by this
+    function<void()> kingMoveEffect = [&]() { canCastle = false; };
     for (vector<Move>& subset : moves) {
         for (Move& move : subset) {
             move.effect = kingMoveEffect;
@@ -474,7 +472,7 @@ optional<unordered_set<Chess::Piece::Position>> Chess::Board::getPositionsBlocki
 void Chess::Board::updateAvailableMoves() {
     availableMoves.clear();
 
-    if (!traditionalFormat) { // checks and pins disabled for boards with an atypical player count, turn order, move generation etc.
+    if (!winByCheckmate) { // checks and pins disabled for boards with an atypical player count, turn order, move generation etc.
         vector<future<vector<vector<Move>>>> futures;
         for (auto piece : pieces) {
             if (piece && piece->color == getCurrentTurn()) {
@@ -566,8 +564,12 @@ Chess::Board::Board(const Board& board) {
     ptrdiff_t turnCount = std::distance(board.turnOrder.begin(), board.currentTurn);
     currentTurn = std::next(turnOrder.begin(), turnCount);
 
+    winByCheckmate = board.winByCheckmate;
+
     updateAvailableMoves();
 }
+
+
 
 Chess::Board::Board(const Board& board, const Piece*& removedPiece) {
     for (auto piece : board.pieces) {
@@ -581,6 +583,8 @@ Chess::Board::Board(const Board& board, const Piece*& removedPiece) {
 
     ptrdiff_t turnCount = std::distance(board.turnOrder.begin(), board.currentTurn);
     currentTurn = std::next(turnOrder.begin(), turnCount);
+
+    winByCheckmate = board.winByCheckmate;
 
     updateAvailableMoves();
 }
@@ -640,6 +644,8 @@ void Chess::Board::setDefaultGame() {
         new Knight{Piece::Color::black, Piece::Position{'G', 8}},
         new Rook  {Piece::Color::black, Piece::Position{'H', 8}}
     };
+
+    winByCheckmate = true;
 
     updateAvailableMoves();
 }

@@ -137,6 +137,7 @@ namespace Chess {
         std::vector<Piece::Color> turnOrder;
         std::vector<Piece::Color>::const_iterator currentTurn;
         std::vector<Move> availableMoves;
+        bool winByCheckmate;
 
         void advanceTurn(std::vector<Piece::Color>::const_iterator&) const;
         std::optional<Piece::Position> getPieceToCapturePosition(Piece::Color color) const;
@@ -150,6 +151,7 @@ namespace Chess {
 
         Board();
         Board(const Board&);
+        Board(const Board&, const Piece*&);
         ~Board();
 
         void setDefaultGame();
@@ -163,10 +165,6 @@ namespace Chess {
         bool makeMove(const int& selectedMove);
 
         friend struct Piece;
-
-    protected:
-
-        Board(const Board&, const Piece*&);
 
     };
 }
