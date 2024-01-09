@@ -6,20 +6,20 @@
 #include "chess_model.h"
 #include <vector>
 #include <unordered_set>
-#include <functional>
-#include <optional>
 #include <tuple>
-#include <future>
+#include <optional>
+#include <functional>
 #include <exception>
+#include <future>
 
 using std::vector;
 using std::unordered_set;
-using std::function;
+using std::tuple;
 using std::optional;
 using std::nullopt;
-using std::tuple;
-using std::async;
+using std::function;
 using std::future;
+using std::async;
 
 
 
@@ -473,7 +473,7 @@ void Chess::Board::updateAvailableMoves() {
         vector<future<vector<vector<Move>>>> futures;
         for (auto piece : pieces) {
             if (piece && piece->color == getCurrentTurn()) {
-                futures.push_back(std::async(std::launch::async, [this, &piece]() {
+                futures.push_back(async(std::launch::async, [this, &piece]() {
                     return piece->getMoves(*this); }));
             }
         }
@@ -491,7 +491,7 @@ void Chess::Board::updateAvailableMoves() {
     optional<unordered_set<Chess::Piece::Position>> positionsBlockingCheck = getPositionsBlockingCheck();
     for (auto piece : pieces) {
         if (piece && piece->color == getCurrentTurn()) {
-            futures.push_back(std::async(std::launch::async, [this, &piece, &positionsBlockingCheck]() {
+            futures.push_back(async(std::launch::async, [this, &piece, &positionsBlockingCheck]() {
                 return this->getValidMoves(piece, positionsBlockingCheck); }));
         }
     }
@@ -529,7 +529,7 @@ vector<Chess::Move> Chess::Board::getValidMoves(Piece*& piece, const optional<un
         }
 
         // curate moves if pinned
-        Board boardWithoutPiece(*this, piece);
+        Board boardWithoutPiece = Board(*this, piece);
         optional<unordered_set<Piece::Position>> positionsKeepingPin = nullopt;
         positionsKeepingPin = boardWithoutPiece.getPositionsBlockingCheck();
         if (positionsKeepingPin) {
@@ -566,7 +566,7 @@ Chess::Board::Board(const Board& board) {
     updateAvailableMoves();
 }
 
-Chess::Board::Board(const Board& board, const Piece*& removedPiece) {
+Chess::Board::Board(const Board& board, const Piece* removedPiece) {
     for (auto piece : board.pieces) {
         if (piece && piece != removedPiece) pieces.push_back(piece->newCopy());
         else pieces.push_back(nullptr);

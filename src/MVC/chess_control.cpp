@@ -151,13 +151,13 @@ namespace {
 				}
 				message = "Move invalid.";
 				return false;
+			}
 		}
 		if (input.size() == 3 && isalpha(input[0]) && isalpha(input[1]) && isdigit(input[2])) {
 			optional<int> requestedMoveIndex = nullopt;
 			for (const auto& [notation, color, position] : board.getPieces()) {
 				for (int i = 0; i < availableMoves.size(); ++i) {
-					if (
-						tolower(notation) == input[0] &&
+					if (tolower(notation) == input[0] &&
 						availableMoves[i].from == position &&
 						availableMoves[i].to.x == input[1] &&
 						availableMoves[i].to.y == input[2]

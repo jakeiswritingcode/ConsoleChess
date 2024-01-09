@@ -4,13 +4,12 @@
 
 
 
-
-#include <vector>
 #include <string>
-#include <functional>
-#include <optional>
-#include <tuple>
+#include <vector>
 #include <unordered_set>
+#include <tuple>
+#include <optional>
+#include <functional>
 
 
 
@@ -135,6 +134,8 @@ namespace Chess {
     {
     private:
 
+        Board(const Board&, const Piece*);
+
         std::vector<Piece*> pieces;
         char pieceTypeToCapture;
         std::vector<Piece::Color> turnOrder;
@@ -154,7 +155,6 @@ namespace Chess {
 
         Board();
         Board(const Board&);
-        Board(const Board&, const Piece*&);
         ~Board();
 
         void setDefaultGame();
