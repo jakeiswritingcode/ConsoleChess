@@ -15,7 +15,8 @@
 #include <tuple>
 #include <optional>
 
-
+using namespace chess::model;
+using namespace chess::view;
 
 using std::cin;
 using std::string;
@@ -24,8 +25,6 @@ using std::unordered_set;
 using std::optional;
 using std::nullopt;
 using std::exception;
-using namespace Chess;
-using namespace Chess::View;
 
 
 
@@ -277,7 +276,7 @@ namespace {
 	}
 }
 
-namespace Chess {
+namespace chess {
 	void play() {
 		string input = "";
 		while (std::cin && input != "exit") {
@@ -293,7 +292,7 @@ namespace Chess {
 			string message = "\"You may begin. Enter 'help' for a list of commands.\"";
 			while (std::cin && !board.getAvailableMoves().empty()) {
 				if (ai && *ai == board.getCurrentTurn()) {
-					ChessAI::makeMove(board);
+					chess::ai::makeMove(board);
 					message = "AI move complete.";
 				}
 				else {

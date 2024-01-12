@@ -8,13 +8,12 @@
 #include <random>
 // TODO: extra include statements from the STL go here
 
-
-
 using std::vector;
 using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
-using namespace Chess;
+
+using namespace chess::model;
 
 
 
@@ -30,7 +29,7 @@ namespace {
 	// TODO: helper functions go here
 }
 
-namespace ChessAI {
+namespace chess::ai {
 	void makeMove(Board& board) { // TODO: difficulty could be added as an additional argument (enum)
 		vector<Move> availableMoves = board.getAvailableMoves();
 

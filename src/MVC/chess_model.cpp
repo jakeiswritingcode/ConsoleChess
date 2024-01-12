@@ -21,12 +21,14 @@ using std::function;
 using std::future;
 using std::async;
 
+using namespace chess::model;
 
 
-vector<Chess::Piece*> Chess::Piece::getPieces(const Board& board) { return board.pieces; }
+
+vector<Piece*> Piece::getPieces(const Board& board) { return board.pieces; }
 
 
-vector<vector<Chess::Move>> Chess::Piece::generateMovesWithPattern(const vector<Position>& pattern, const Board& board) {
+vector<vector<Move>> Piece::generateMovesWithPattern(const vector<Position>& pattern, const Board& board) {
     vector<vector<Move>> result;
 
     for (Position nextPosition : pattern) {
@@ -39,7 +41,7 @@ vector<vector<Chess::Move>> Chess::Piece::generateMovesWithPattern(const vector<
     return result;
 }
 
-vector<vector<Chess::Move>> Chess::Piece::generateMovesWithPattern(const vector<function<Position(Position) >> &pattern, const Board& board) {
+vector<vector<Move>> Piece::generateMovesWithPattern(const vector<function<Position(Position) >> &pattern, const Board& board) {
     vector<vector<Move>> result;
 
     vector<Move> subset;
@@ -60,27 +62,27 @@ vector<vector<Chess::Move>> Chess::Piece::generateMovesWithPattern(const vector<
     return result;
 }
 
-Chess::Piece::Position::Position(char x, int y) {
+Piece::Position::Position(char x, int y) {
     this->x = x;
     this->y = y;
 }
 
-Chess::Piece::Position::Position(int x, int y) {
+Piece::Position::Position(int x, int y) {
     this->x = char('A' - 1 + x);
     this->y = y;
 }
 
-bool Chess::Piece::Position::operator ==(const Position& p) const { return this->x == p.x && this->y == p.y; }
-bool Chess::Piece::Position::operator !=(const Position& p) const { return !(*this == p); }
+bool Piece::Position::operator ==(const Position& p) const { return this->x == p.x && this->y == p.y; }
+bool Piece::Position::operator !=(const Position& p) const { return !(*this == p); }
 
-bool Chess::Piece::Position::sameCol(const Position& position1, const Position& position2) { return position1.x == position2.x; }
-bool Chess::Piece::Position::sameRow(const Position& position1, const Position& position2) { return position1.y == position2.y; }
-bool Chess::Piece::Position::sameMainDiagonal(const Position& position1, const Position& position2) { return position1.x + position1.y == position2.x + position2.y; }
-bool Chess::Piece::Position::sameAntidiagonal(const Position& position1, const Position& position2) { return position1.x - position1.y == position2.x - position2.y; }
-bool Chess::Piece::Position::inBounds(const Position& position) { return position.x >= 'A' && position.x <= ('A' - 1) + 8 && position.y >= 1 && position.y <= 8; }
+bool Piece::Position::sameCol(const Position& position1, const Position& position2) { return position1.x == position2.x; }
+bool Piece::Position::sameRow(const Position& position1, const Position& position2) { return position1.y == position2.y; }
+bool Piece::Position::sameMainDiagonal(const Position& position1, const Position& position2) { return position1.x + position1.y == position2.x + position2.y; }
+bool Piece::Position::sameAntidiagonal(const Position& position1, const Position& position2) { return position1.x - position1.y == position2.x - position2.y; }
+bool Piece::Position::inBounds(const Position& position) { return position.x >= 'A' && position.x <= ('A' - 1) + 8 && position.y >= 1 && position.y <= 8; }
 
-std::optional<Chess::Piece::Color> Chess::Piece::Position::heldBy(const Position& position, const Board& board) {
-    for (Chess::Piece* const& piece : board.pieces) {
+std::optional<Piece::Color> Piece::Position::heldBy(const Position& position, const Board& board) {
+    for (Piece* const& piece : board.pieces) {
         if (piece && piece->position == position) {
             return piece->color;
         }
@@ -88,7 +90,7 @@ std::optional<Chess::Piece::Color> Chess::Piece::Position::heldBy(const Position
     return nullopt;
 }
 
-Chess::Pawn::Pawn(Color color, Position position, bool firstMove, bool enPassantCapturable) {
+Pawn::Pawn(Color color, Position position, bool firstMove, bool enPassantCapturable) {
     this->color = color;
     this->position = position;
     this->firstMove = firstMove;
@@ -96,11 +98,11 @@ Chess::Pawn::Pawn(Color color, Position position, bool firstMove, bool enPassant
     updateEffect = [&]() { enPassantCapturable = false; };
 }
 
-Chess::Piece* Chess::Pawn::newCopy() const {
+Piece* Pawn::newCopy() const {
     return new Pawn(color, position, enPassantCapturable);
 }
 
-vector<vector<Chess::Move>> Chess::Pawn::getMoves(const Board& board) {
+vector<vector<Move>> Pawn::getMoves(const Board& board) {
     vector<vector<Move>> moves;
 
     Position forward;
@@ -187,18 +189,18 @@ vector<vector<Chess::Move>> Chess::Pawn::getMoves(const Board& board) {
     return moves;
 }
 
-char Chess::Pawn::getNotation() const { return 'P'; }
+char Pawn::getNotation() const { return 'P'; }
 
-Chess::Knight::Knight(Color color, Position position) {
+Knight::Knight(Color color, Position position) {
     this->color = color;
     this->position = position;
 }
 
-Chess::Piece* Chess::Knight::newCopy() const {
+Piece* Knight::newCopy() const {
     return new Knight(color, position);
 }
 
-vector<vector<Chess::Move>> Chess::Knight::getMoves(const Board& board) {
+vector<vector<Move>> Knight::getMoves(const Board& board) {
     char& x = position.x;
     int& y = position.y;
     return generateMovesWithPattern(
@@ -215,18 +217,18 @@ vector<vector<Chess::Move>> Chess::Knight::getMoves(const Board& board) {
         board);
 }
 
-char Chess::Knight::getNotation() const { return 'N'; }
+char Knight::getNotation() const { return 'N'; }
 
-Chess::Bishop::Bishop(Color color, Position position) {
+Bishop::Bishop(Color color, Position position) {
     this->color = color;
     this->position = position;
 }
 
-Chess::Piece* Chess::Bishop::newCopy() const {
+Piece* Bishop::newCopy() const {
     return new Bishop(color, position);
 }
 
-vector<vector<Chess::Move>> Chess::Bishop::getMoves(const Board& board) {
+vector<vector<Move>> Bishop::getMoves(const Board& board) {
     return generateMovesWithPattern(
         {
             [&](Position p) { return Position(p.x + 1, p.y + 1); },
@@ -237,19 +239,19 @@ vector<vector<Chess::Move>> Chess::Bishop::getMoves(const Board& board) {
         board);
 }
 
-char Chess::Bishop::getNotation() const { return 'B'; }
+char Bishop::getNotation() const { return 'B'; }
 
-Chess::Rook::Rook(Color color, Position position, bool canCastle) {
+Rook::Rook(Color color, Position position, bool canCastle) {
     this->color = color;
     this->position = position;
     this->canCastle = canCastle;
 }
 
-Chess::Piece* Chess::Rook::newCopy() const {
+Piece* Rook::newCopy() const {
     return new Rook(color, position, canCastle);
 }
 
-vector<vector<Chess::Move>> Chess::Rook::getMoves(const Board& board) {
+vector<vector<Move>> Rook::getMoves(const Board& board) {
     auto moves = generateMovesWithPattern(
         {
             [&](Position p) { return Position(p.x + 1, p.y); },
@@ -269,18 +271,18 @@ vector<vector<Chess::Move>> Chess::Rook::getMoves(const Board& board) {
     return moves;
 }
 
-char Chess::Rook::getNotation() const { return 'R'; }
+char Rook::getNotation() const { return 'R'; }
 
-Chess::Queen::Queen(Color color, Position position) {
+Queen::Queen(Color color, Position position) {
     this->color = color;
     this->position = position;
 }
 
-Chess::Piece* Chess::Queen::newCopy() const {
+Piece* Queen::newCopy() const {
     return new Queen(color, position);
 }
 
-vector<vector<Chess::Move>> Chess::Queen::getMoves(const Board& board) {
+vector<vector<Move>> Queen::getMoves(const Board& board) {
     return generateMovesWithPattern(
         {
             [&](Position p) { return Position(p.x + 1, p.y); },
@@ -296,19 +298,19 @@ vector<vector<Chess::Move>> Chess::Queen::getMoves(const Board& board) {
         board);
 }
 
-char Chess::Queen::getNotation() const { return 'Q'; }
+char Queen::getNotation() const { return 'Q'; }
 
-Chess::King::King(Color color, Position position, bool canCastle) {
+King::King(Color color, Position position, bool canCastle) {
     this->color = color;
     this->position = position;
     this->canCastle = canCastle;
 }
 
-Chess::Piece* Chess::King::newCopy() const {
+Piece* King::newCopy() const {
     return new King(color, position, canCastle);
 }
 
-vector<vector<Chess::Move>> Chess::King::getMoves(const Board& board) {
+vector<vector<Move>> King::getMoves(const Board& board) {
     char& x = position.x;
     int& y = position.y;
     auto moves = generateMovesWithPattern(
@@ -403,22 +405,22 @@ vector<vector<Chess::Move>> Chess::King::getMoves(const Board& board) {
     return moves;
 }
 
-char Chess::King::getNotation() const { return 'K'; }
+char King::getNotation() const { return 'K'; }
 
-Chess::Move::Move(Piece::Position from, Piece::Position to, optional<function<void()>> effect) {
+Move::Move(Piece::Position from, Piece::Position to, optional<function<void()>> effect) {
     this->from = from;
     this->to = to;
     this->effect = effect;
 }
 
-void Chess::Board::advanceTurn(vector<Chess::Piece::Color>::const_iterator& i) const {
+void Board::advanceTurn(vector<Piece::Color>::const_iterator& i) const {
     ++i;
     if (i == turnOrder.end()) {
         i = turnOrder.begin();
     }
 }
 
-optional<Chess::Piece::Position> Chess::Board::getPieceToCapturePosition(Piece::Color color) const {
+optional<Piece::Position> Board::getPieceToCapturePosition(Piece::Color color) const {
     for (auto piece : pieces) {
         if (piece && piece->color == color && piece->getNotation() == pieceTypeToCapture) {
             return piece->position;
@@ -427,7 +429,7 @@ optional<Chess::Piece::Position> Chess::Board::getPieceToCapturePosition(Piece::
     return nullopt;
 }
 
-optional<unordered_set<Chess::Piece::Position>> Chess::Board::getPositionsBlockingCheck() const {
+optional<unordered_set<Piece::Position>> Board::getPositionsBlockingCheck() const {
     optional<unordered_set<Piece::Position>> positionsBlockingCheck = nullopt;
 
     optional<Piece::Position> pieceToCapturePosition = getPieceToCapturePosition(getCurrentTurn());
@@ -466,7 +468,7 @@ optional<unordered_set<Chess::Piece::Position>> Chess::Board::getPositionsBlocki
     return positionsBlockingCheck;
 }
 
-void Chess::Board::updateAvailableMoves() {
+void Board::updateAvailableMoves() {
     availableMoves.clear();
 
     if (!winByCheckmate) { // checks and pins disabled for boards with an atypical player count, turn order, move generation etc.
@@ -483,12 +485,12 @@ void Chess::Board::updateAvailableMoves() {
                 availableMoves.insert(availableMoves.end(), movePattern.begin(), movePattern.end());
             }
         }
-        // TODO: determine if there is a winner here?
+        // TODO: implement variable determining winner and assign to it here if it is determined to be more compatible with 3+ player games
         return;
     }
 
     vector<future<vector<Move>>> futures;
-    optional<unordered_set<Chess::Piece::Position>> positionsBlockingCheck = getPositionsBlockingCheck();
+    optional<unordered_set<Piece::Position>> positionsBlockingCheck = getPositionsBlockingCheck();
     for (auto piece : pieces) {
         if (piece && piece->color == getCurrentTurn()) {
             futures.push_back(async(std::launch::async, [this, &piece, &positionsBlockingCheck]() {
@@ -499,11 +501,10 @@ void Chess::Board::updateAvailableMoves() {
         auto validMoves = future.get();
         availableMoves.insert(availableMoves.end(), validMoves.begin(), validMoves.end());
     }
-
-    // TODO: determine if there is a winner here?
+    // TODO: implement variable determining winner and assign to it here if it is determined to be more compatible with 3+ player games
 }
 
-vector<Chess::Move> Chess::Board::getValidMoves(Piece*& piece, const optional<unordered_set<Chess::Piece::Position>>& positionsBlockingCheck) const {
+vector<Move> Board::getValidMoves(Piece*& piece, const optional<unordered_set<Piece::Position>>& positionsBlockingCheck) const {
     vector<Move> moves;
     for (auto patterns : piece->getMoves(*this)) moves.insert(moves.end(), patterns.begin(), patterns.end());
 
@@ -544,11 +545,11 @@ vector<Chess::Move> Chess::Board::getValidMoves(Piece*& piece, const optional<un
     }
 }
 
-Chess::Board::Board() {
+Board::Board() {
     setDefaultGame();
 }
 
-Chess::Board::Board(const Board& board) {
+Board::Board(const Board& board) {
     for (Piece* piece : board.pieces) {
         if (piece) pieces.push_back(piece->newCopy());
         else pieces.push_back(nullptr);
@@ -566,7 +567,7 @@ Chess::Board::Board(const Board& board) {
     updateAvailableMoves();
 }
 
-Chess::Board::Board(const Board& board, const Piece* removedPiece) {
+Board::Board(const Board& board, const Piece* removedPiece) {
     for (auto piece : board.pieces) {
         if (piece && piece != removedPiece) pieces.push_back(piece->newCopy());
         else pieces.push_back(nullptr);
@@ -584,13 +585,13 @@ Chess::Board::Board(const Board& board, const Piece* removedPiece) {
     updateAvailableMoves();
 }
 
-Chess::Board::~Board() {
+Board::~Board() {
     for (Piece*& piece : pieces) {
         delete piece;
     }
 }
 
-void Chess::Board::setDefaultGame() {
+void Board::setDefaultGame() {
     turnOrder = {
         Piece::Color::white,
         Piece::Color::black
@@ -645,7 +646,7 @@ void Chess::Board::setDefaultGame() {
     updateAvailableMoves();
 }
 
-vector<tuple<char, Chess::Piece::Color, Chess::Piece::Position>> Chess::Board::getPieces() const {
+vector<tuple<char, Piece::Color, Piece::Position>> Board::getPieces() const {
     vector<tuple<char, Piece::Color, Piece::Position>> result;
     for (Piece* piece : pieces) {
         if (piece) {
@@ -657,15 +658,15 @@ vector<tuple<char, Chess::Piece::Color, Chess::Piece::Position>> Chess::Board::g
     return result;
 }
 
-Chess::Piece::Color Chess::Board::getCurrentTurn() const {
+Piece::Color Board::getCurrentTurn() const {
     return *currentTurn;
 }
 
-vector<Chess::Move> Chess::Board::getAvailableMoves() const {
+vector<Move> Board::getAvailableMoves() const {
     return availableMoves;
 }
 
-void Chess::Board::makeMove(const int& moveIndex) {
+void Board::makeMove(const int& moveIndex) {
     Move move = availableMoves[moveIndex];
 
     int f = -1; // from piece index

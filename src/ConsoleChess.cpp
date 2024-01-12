@@ -16,5 +16,5 @@
 */
 
 int main() {
-	Chess::play();
+	chess::play();
 }

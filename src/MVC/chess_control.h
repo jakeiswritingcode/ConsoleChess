@@ -4,6 +4,6 @@
 
 
 
-namespace Chess {
+namespace chess {
 	void play();
 }

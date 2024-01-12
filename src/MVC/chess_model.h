@@ -13,7 +13,7 @@
 
 
 
-namespace Chess {
+namespace chess::model {
     class Board;
 
     struct Move;
