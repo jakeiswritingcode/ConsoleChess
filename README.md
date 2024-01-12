@@ -15,3 +15,9 @@ RESET G2 G3 B8 A6 G1 F3 A6 B8 F1 H3 B8 A6 E1
 
 Promotion Test Input:  
 RESET B2 B3 B8 A6 B3 B4 A6 B8 B4 B5 B8 A6 B5 A6 G8 H6 A6 B7 H6 G8 B7
+
+## TODO:
+- determine if the game is generated with default conditions automatically by a helper method that can be used by any constructor
+- automatic stalemate/victory detected upon insufficient material
+- automated display using the ncurses/PDCurses library for console applications
+- prompt user for preferred type of pawn promotion
