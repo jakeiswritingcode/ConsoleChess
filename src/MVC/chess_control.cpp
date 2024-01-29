@@ -24,7 +24,6 @@ using std::vector;
 using std::unordered_set;
 using std::optional;
 using std::nullopt;
-using std::exception;
 
 
 
@@ -292,7 +291,7 @@ namespace chess {
 			string message = "\"You may begin. Enter 'help' for a list of commands.\"";
 			while (std::cin && !board.getAvailableMoves().empty()) {
 				if (ai && *ai == board.getCurrentTurn()) {
-					chess::ai::makeMove(board);
+					board.makeMove(chess::ai::getMove(board));
 					message = "AI move complete.";
 				}
 				else {

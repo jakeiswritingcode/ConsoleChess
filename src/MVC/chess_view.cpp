@@ -19,7 +19,6 @@ using std::string;
 using std::vector;
 using std::optional;
 using std::nullopt;
-using std::exception;
 
 using namespace chess::model;
 
@@ -46,7 +45,7 @@ namespace chess::view {
 			cout << WINDOW_MARGIN << "Current Turn: Black (lower case)" << '\n';
 		}
 		else {
-			throw exception("3+ players cannot be represented in console window");
+			throw std::logic_error("3+ players cannot be represented in console window");
 		}
 		cout << '\n';
 	}
@@ -78,7 +77,7 @@ namespace chess::view {
 				grid[position.x - 'A'][position.y - 1] = tolower(notation);
 			}
 			else {
-				throw exception("3+ players cannot be represented in console window");
+				throw std::logic_error("3+ players cannot be represented in console window");
 			}
 		}
 

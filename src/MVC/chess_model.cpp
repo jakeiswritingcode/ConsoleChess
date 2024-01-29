@@ -9,7 +9,6 @@
 #include <tuple>
 #include <optional>
 #include <functional>
-#include <exception>
 #include <future>
 
 using std::vector;
@@ -115,7 +114,7 @@ vector<vector<Move>> Pawn::getMoves(const Board& board) {
         forward = Position(position.x, position.y - 1);
         doubleStep = Position(position.x, position.y - 2);
     }
-    else throw std::exception("nonstandard pawn color not implemented");
+    else throw std::logic_error("nonstandard pawn color not implemented");
 
     function<void()> pawnMoveEffect = [&]() { firstMove = false; };
     if (Position::inBounds(forward) && !Position::inBounds(doubleStep)) {

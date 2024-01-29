@@ -9,5 +9,6 @@
 
 
 namespace chess::ai {
-	void makeMove(chess::model::Board& board);
+	enum class Difficulty { random, easy, medium, hard};
+	int getMove(const chess::model::Board&, Difficulty = Difficulty::medium);
 }
