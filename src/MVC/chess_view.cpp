@@ -50,7 +50,16 @@ namespace chess::view {
 		cout << '\n';
 	}
 
-	string updateBoardString(const Board& board, const vector<Piece::Position>& selectedPieceMoves) {
+	string updateBoardString(const Board& board, const optional<Piece::Position>& selectedPiece) {
+		vector<Piece::Position> selectedPieceMoves;
+		if (selectedPiece) {
+			for (auto& availableMove : board.getAvailableMoves()) {
+				if (availableMove.from == *selectedPiece) {
+					selectedPieceMoves.push_back(availableMove.to);
+				}
+			}
+		}
+
 		const char WHITE_SQUARE_CHAR = '-';
 		const char BLACK_SQUARE_CHAR = ' ';
 		const char WHITE_SQUARE_HIGHLIGHT_CHAR = '\\';

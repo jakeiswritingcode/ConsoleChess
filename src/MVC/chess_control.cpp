@@ -50,50 +50,49 @@ namespace {
 		string& message
 	) {
 		switch (userAction) {
-		case UserAction::indicatePosition:
+		case UserAction::indicatePosition: {
 			model::Piece::Position indicatedPosition = { input[0] - '0', input[1] - '0' };
-			if (selectedPiece) {
-				optional<int> optIndex = nullopt;
-				auto availableMoves = board.getAvailableMoves();
-				for (int i = 0; i < availableMoves.size(); ++i) {
-					if (availableMoves[i].from == selectedPiece &&
-						availableMoves[i].to == indicatedPosition) {
-						optIndex = i;
+
+			optional<int> optIndex = nullopt;
+			auto availableMoves = board.getAvailableMoves();
+			for (int i = 0; i < availableMoves.size(); ++i) {
+				if ((!selectedPiece || availableMoves[i].from == *selectedPiece) &&
+					availableMoves[i].to == indicatedPosition)
+				{
+					optIndex = i;
+					break;
+				}
+			}
+			if (optIndex) {
+				board.makeMove(*optIndex);
+				selectedPiece = nullopt;
+				message = "Move complete.";
+				view::updateBoardString(board, selectedPiece);
+			}
+			else {
+				if (!selectedPiece) {
+					for (const auto& move : availableMoves) {
+						if (move.from == indicatedPosition) {
+							selectedPiece = move.from;
+							message = "Piece at " + string(1, selectedPiece->x) + string(1, '0' + selectedPiece->y) + " selected.";
+							view::updateBoardString(board, selectedPiece);
+						}
+					}
+					if (!selectedPiece) {
+						message = "Select a valid piece.";
 					}
 				}
-				if (optIndex) {
-					board.makeMove(*optIndex);
+				else if (selectedPiece && *selectedPiece == indicatedPosition) {
 					selectedPiece = nullopt;
-					message = "Move complete.";
-					view::updateBoardString(board);
+					message = "Piece deselected.";
+					view::updateBoardString(board, selectedPiece);
 				}
 				else {
 					message = "Select an available move.";
 				}
 			}
-			else {
-				for (const auto& move : board.getAvailableMoves()) {
-					if (move.from == indicatedPosition) {
-						selectedPiece = move.from;
-						message = "Piece at " + string(1, selectedPiece->x) + string(1, '0' + selectedPiece->y) + " selected.";
-						view::updateBoardString(board, getSelectedPieceMoves(selectedPiece, board.getAvailableMoves()));
-					}
-				}
-				if (!selectedPiece) {
-					optional<int> optIndex = getAlgebraicNotationMove(input, board);
-					if (optIndex) {
-						board.makeMove(*optIndex);
-						selectedPiece = nullopt;
-						message = "Move complete.";
-						view::updateBoardString(board);
-					}
-					else {
-						message = "Invalid prompt.";
-					}
-				}
-			}
 			break;
-
+		}
 		case UserAction::algebraicNotation: {
 			optional<int> optIndex = nullopt;
 			if (input.size() == 3 && std::isalpha(input[0]) && std::isalpha(input[1]) && isdigit(input[2])) {
@@ -116,7 +115,7 @@ namespace {
 				board.makeMove(*optIndex);
 				selectedPiece = nullopt;
 				message = "Move complete.";
-				view::updateBoardString(board);
+				view::updateBoardString(board, selectedPiece);
 			}
 			else {
 				message = "Invalid prompt.";
@@ -127,7 +126,7 @@ namespace {
 			if (selectedPiece != nullopt) {
 				selectedPiece = nullopt;
 				message = "Piece deselected.";
-				view::updateBoardString(board);
+				view::updateBoardString(board, selectedPiece);
 			}
 			else {
 				message = "No piece selected yet.";
@@ -154,7 +153,7 @@ namespace {
 			selectedPiece = nullopt;
 			ai = nullopt;
 			message = "Game reset.";
-			view::updateBoardString(board);
+			view::updateBoardString(board, selectedPiece);
 			break;
 
 		case UserAction::aiWhite:
@@ -162,7 +161,7 @@ namespace {
 			selectedPiece = nullopt;
 			ai = model::Piece::Color::white;
 			message = "Game reset with AI enabled as white.";
-			view::updateBoardString(board);
+			view::updateBoardString(board, selectedPiece);
 			break;
 
 		case UserAction::aiBlack:
@@ -170,7 +169,7 @@ namespace {
 			selectedPiece = nullopt;
 			ai = model::Piece::Color::black;
 			message = "Game reset with AI enabled as black.";
-			view::updateBoardString(board);
+			view::updateBoardString(board, selectedPiece);
 			break;
 		}
 	}
@@ -324,18 +323,6 @@ namespace {
 
 		return UserAction::invalidAction;
 	}
-
-	vector<model::Piece::Position> getSelectedPieceMoves(const optional<model::Piece::Position>& selectedPiece, const vector<model::Move>& availableMoves) {
-		vector<model::Piece::Position> result;
-		if (selectedPiece) {
-			for (const model::Move& move : availableMoves) {
-				if (move.from == selectedPiece) {
-					result.push_back(move.to);
-				}
-			}
-		}
-		return result;
-	}
 }
 
 namespace chess {
@@ -349,7 +336,7 @@ namespace chess {
 			optional<model::Piece::Color> ai = nullopt;
 
 			vector<model::Piece::Position> selectedPieceMoves = { };
-			view::updateBoardString(board);
+			view::updateBoardString(board, selectedPiece);
 
 			string message = "Game start. Enter 'help' for a list of commands.";
 			while (std::cin && !board.getAvailableMoves().empty()) {
@@ -370,8 +357,7 @@ namespace chess {
 					} while (std::cin && userAction != exitGame);
 				}
 
-				selectedPieceMoves = getSelectedPieceMoves(selectedPiece, board.getAvailableMoves());
-				view::updateBoardString(board, selectedPieceMoves);
+				view::updateBoardString(board, selectedPiece);
 			}
 
 			view::printHeader();

@@ -7,7 +7,7 @@
 namespace chess::view {
 	void printHeader();
 	void printCurrentTurn(const chess::model::Board& board);
-	std::string updateBoardString(const chess::model::Board& board, const std::vector<chess::model::Piece::Position>& selectedPieceMoves = { });
+	std::string updateBoardString(const chess::model::Board& board, const std::optional<chess::model::Piece::Position>& selectedPieceMoves = { });
 	void printBoardString();
 	void printMessage(std::string message);
 	void printHelpMenu();
