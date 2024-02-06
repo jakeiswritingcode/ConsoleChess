@@ -18,6 +18,7 @@ RESET B2 B3 B8 A6 B3 B4 A6 B8 B4 B5 B8 A6 B5 A6 G8 H6 A6 B7 H6 G8 B7
 
 ## TODO:
 - resolve build errrors from initial AI commit
+- implement asio networking library
 - automatic stalemate/victory detected upon insufficient material
 - automated display using the ncurses/PDCurses library for console applications
 - prompt user for preferred type of pawn promotion

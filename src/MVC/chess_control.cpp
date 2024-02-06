@@ -15,8 +15,7 @@
 #include <tuple>
 #include <optional>
 
-using namespace chess::model;
-using namespace chess::view;
+using namespace chess;
 
 using std::cin;
 using std::string;
@@ -28,244 +27,308 @@ using std::nullopt;
 
 
 namespace {
-	bool parseInput(string& input, string& message, optional<Piece::Position>& selectedPiece, optional<Piece::Color>& ai, Board& board) {
-		for (auto& inputChar : input) {
-			inputChar = tolower(inputChar);
-		}
 
-		if (input == "h" || input == "help") {
-			printHelpMenu();
-			return false;
-		}
+	enum UserAction {
+		indicatePosition,
+		algebraicNotation,
+		deselectPiece,
+		availableMoves,
+		help,
+		reset,
+		aiWhite,
+		aiBlack,
+		exitGame,
+		invalidAction
+	};
 
-		if (input == "c" || input == "cancel") {
+	void processUserAction(
+		UserAction& userAction,
+		string& input,
+		model::Board& board,
+		optional<model::Piece::Position>& selectedPiece,
+		optional<model::Piece::Color>& ai,
+		string& message
+	) {
+		switch (userAction) {
+		case UserAction::indicatePosition:
+			model::Piece::Position indicatedPosition = { input[0] - '0', input[1] - '0' };
+			if (selectedPiece) {
+				optional<int> optIndex = nullopt;
+				auto availableMoves = board.getAvailableMoves();
+				for (int i = 0; i < availableMoves.size(); ++i) {
+					if (availableMoves[i].from == selectedPiece &&
+						availableMoves[i].to == indicatedPosition) {
+						optIndex = i;
+					}
+				}
+				if (optIndex) {
+					board.makeMove(*optIndex);
+					selectedPiece = nullopt;
+					message = "Move complete.";
+					view::updateBoardString(board);
+				}
+				else {
+					message = "Select an available move.";
+				}
+			}
+			else {
+				for (const auto& move : board.getAvailableMoves()) {
+					if (move.from == indicatedPosition) {
+						selectedPiece = move.from;
+						message = "Piece at " + string(1, selectedPiece->x) + string(1, '0' + selectedPiece->y) + " selected.";
+						view::updateBoardString(board, getSelectedPieceMoves(selectedPiece, board.getAvailableMoves()));
+					}
+				}
+				if (!selectedPiece) {
+					optional<int> optIndex = getAlgebraicNotationMove(input, board);
+					if (optIndex) {
+						board.makeMove(*optIndex);
+						selectedPiece = nullopt;
+						message = "Move complete.";
+						view::updateBoardString(board);
+					}
+					else {
+						message = "Invalid prompt.";
+					}
+				}
+			}
+			break;
+
+		case UserAction::algebraicNotation: {
+			optional<int> optIndex = nullopt;
+			if (input.size() == 3 && std::isalpha(input[0]) && std::isalpha(input[1]) && isdigit(input[2])) {
+				optIndex = getAlgebraicNotationPrefixMove(input, board);
+			}
+			else if (input.size() == 2 && std::isalpha(input[0]) && input[1] == 'x') {
+				optIndex = getAlgebraicNotationCaptureMove(input, board);
+			}
+			else if (input.size() == 3 && std::isalpha(input[0]) && input[1] == 'x' && isalpha(input[2])) {
+				optIndex = getAlgebraicNotationPrefixCaptureMove(input, board);
+			}
+			else if (input == "00" || input == "0-0" || input == "oo" || input == "o-o") {
+				optIndex = getKingsideCastlingMove(board);
+			}
+			else if (input == "000" || input == "0-0-0" || input == "ooo" || input == "o-o-o") {
+				optIndex = getQueensideCastlingMove(board);
+			}
+
+			if (optIndex) {
+				board.makeMove(*optIndex);
+				selectedPiece = nullopt;
+				message = "Move complete.";
+				view::updateBoardString(board);
+			}
+			else {
+				message = "Invalid prompt.";
+			}
+			break;
+		}
+		case UserAction::deselectPiece:
 			if (selectedPiece != nullopt) {
 				selectedPiece = nullopt;
 				message = "Piece deselected.";
-				return true;
+				view::updateBoardString(board);
 			}
 			else {
 				message = "No piece selected yet.";
-				return false;
 			}
-		}
+			break;
 
-		if (input == "ai-white") {
-			board.setDefaultGame();
-			selectedPiece = nullopt;
-			ai = Piece::Color::white;
-			message = "AI enabled as white player.";
-			return true;
-		}
-
-		if (input == "ai-black") {
-			board.setDefaultGame();
-			selectedPiece = nullopt;
-			message = "AI enabled as black player.";
-			ai = Piece::Color::black;
-			return true;
-		}
-
-		if (input == "reset") {
-			board.setDefaultGame();
-			selectedPiece = nullopt;
-			message = "Game reset.";
-			ai = nullopt;
-			return true;
-		}
-
-		auto availableMoves = board.getAvailableMoves();
-		if (input == "a" || input == "available") {
+		case UserAction::availableMoves: {
 			message = "Moves are available for pieces on the following positions: ";
-
-			vector<Piece::Position> uniqueMovablePieces;
-			for (const Move& availableMove : availableMoves) {
-				bool unique = true;
-				for (const Piece::Position& uniqueMovablePiece : uniqueMovablePieces) {
-					if (availableMove.from == uniqueMovablePiece) {
-						unique = false;
-					}
-				}
-				if (unique) {
-					uniqueMovablePieces.push_back(availableMove.from);
-				}
+			unordered_set<model::Piece::Position> movablePieces;
+			for (const model::Move& availableMove : board.getAvailableMoves()) {
+				movablePieces.insert(availableMove.from);
 			}
-
-			for (const auto& uniqueMovablePiece : uniqueMovablePieces) {
-				message += " ";
-				message += uniqueMovablePiece.x;
-				message += '0' + uniqueMovablePiece.y;
+			for (const auto& movablePiece : movablePieces) {
+				message += " " + string(1, movablePiece.x) + string(1, '0' + movablePiece.y);
 			}
-
-			return false;
+			break;
 		}
+		case UserAction::help:
+			view::printHelpMenu();
+			break;
 
-		// algebraic notation
-		if (input == "oo") {
-			optional<Piece::Position> kingPosition = nullopt;
-			for (const auto& [notation, color, position] : board.getPieces()) {
-				if (notation == 'K') {
-					if (!kingPosition) kingPosition = position;
-					else {
-						message = "Multiple kings detected.";
-						return false;
-
-					}
-				}
-			}
-			if (kingPosition) {
-				for (int i = 0; i < availableMoves.size(); ++i) {
-					if (availableMoves[i].from == *kingPosition && availableMoves[i].to.x == kingPosition->x + 2) {
-						board.makeMove(i);
-						selectedPiece = nullopt;
-						message = "Move complete.";
-						return true;
-					}
-				}
-				message = "Move invalid.";
-				return false;
-			}
-		}
-		if (input == "ooo") {
-			optional<Piece::Position> kingPosition = nullopt;
-			for (const auto& [notation, color, position] : board.getPieces()) {
-				if (notation == 'K') {
-					if (!kingPosition) kingPosition = position;
-					else {
-						message = "Multiple kings detected.";
-						return false;
-
-					}
-				}
-			}
-			if (kingPosition) {
-				for (int i = 0; i < availableMoves.size(); ++i) {
-					if (availableMoves[i].from == *kingPosition && availableMoves[i].to.x == kingPosition->x - 2) {
-						board.makeMove(i);
-						selectedPiece = nullopt;
-						message = "Move complete.";
-						return true;
-					}
-				}
-				message = "Move invalid.";
-				return false;
-			}
-		}
-		if (input.size() == 3 && isalpha(input[0]) && isalpha(input[1]) && isdigit(input[2])) {
-			optional<int> requestedMoveIndex = nullopt;
-			for (const auto& [notation, color, position] : board.getPieces()) {
-				for (int i = 0; i < availableMoves.size(); ++i) {
-					if (tolower(notation) == input[0] &&
-						availableMoves[i].from == position &&
-						availableMoves[i].to.x == input[1] &&
-						availableMoves[i].to.y == input[2]
-					) {
-						if (!requestedMoveIndex) requestedMoveIndex = i;
-						else {
-							message = "Multiple pieces of the provided type can move to that position.";
-							return false;
-						}
-					}
-					if (requestedMoveIndex) {
-						board.makeMove(*requestedMoveIndex);
-						selectedPiece = nullopt;
-						message = "Move complete.";
-						return true;
-					}
-					message = "Requested move not found.";
-					return false;
-				}
-			}
-		}
-		if (input.size() == 3 && isalpha(input[0]) && input[1] == 'x' && isalpha(input[2])) {
-			unordered_set<Piece::Position> possibleFroms;
-			unordered_set<Piece::Position> possibleTos;
-			for (const auto& [notation, color, position] : board.getPieces()) {
-				if (tolower(notation) == input[0]) possibleFroms.emplace(position);
-				if (tolower(notation) == input[2]) possibleTos.emplace(position);
-			}
-
-			optional<int> requestedMoveIndex = nullopt;
-			for (int i = 0; i < availableMoves.size(); ++i) {
-				if (possibleFroms.find(availableMoves[i].from) != possibleFroms.end() &&
-					possibleTos.find(availableMoves[i].to) != possibleTos.end())
-				{
-					if (!requestedMoveIndex) requestedMoveIndex = i;
-					else {
-						message = "Multiple pieces of type [" + string(1, input[0]) +
-							"] can capture a piece of type [" + string(1, input[2]) + "].";
-						return false;
-					}
-				}
-			}
-			if (requestedMoveIndex) {
-				board.makeMove(*requestedMoveIndex);
-				selectedPiece = nullopt;
-				message = "Move complete.";
-				return true;
-			}
-			message = "Requested move not found.";
-			return false;
-			for (auto possibleFrom : possibleFroms) {
-
-			}
-		}
-
-		if (input.size() != 2 || !isalpha(input[0]) || !isdigit(input[1])) {
-			message = "Provide a letter and a number for your move.";
-			return false;
-		}
-
-		char inputFile = toupper(input[0]);
-		int inputRank = input[1] - '0';
-		Piece::Position inputPosition(inputFile, inputRank);
-		if (inputPosition.x > 'H' || inputPosition.x < 'A' || inputPosition.y > 8 || inputPosition.y < 1) {
-			message = "Move must be in bounds.";
-			return false;
-		}
-
-
-		if (selectedPiece == nullopt) {
-			for (int moveIndex = 0; moveIndex < availableMoves.size() && selectedPiece == nullopt; ++moveIndex) {
-				if (availableMoves[moveIndex].from == inputPosition) {
-					selectedPiece = inputPosition;
-				}
-			}
-			if (selectedPiece == nullopt) {
-				message = "Invalid selection.";
-				return false;
-			}
-			else {
-				message = "Piece at ";
-				message += selectedPiece->x;
-				message += '0' + selectedPiece->y;
-				message += " selected.";
-				return true;
-			}
-		}
-
-		vector<Move> moves = board.getAvailableMoves();
-		int moveIndex = -1;
-		for (int i = 0; i < moves.size(); ++i) {
-			if (*selectedPiece == moves[i].from && inputPosition == moves[i].to) moveIndex = i;
-		}
-
-		bool moveSuccessful = false;
-		if (moveIndex != -1) {
-			board.makeMove(moveIndex);
+		case UserAction::reset:
+			board.setDefaultGame();
 			selectedPiece = nullopt;
-			message = "Move complete.";
-			return true;
-		}
+			ai = nullopt;
+			message = "Game reset.";
+			view::updateBoardString(board);
+			break;
 
-		message = "Please select a highlighted move.";
-		return false;
+		case UserAction::aiWhite:
+			board.setDefaultGame();
+			selectedPiece = nullopt;
+			ai = model::Piece::Color::white;
+			message = "Game reset with AI enabled as white.";
+			view::updateBoardString(board);
+			break;
+
+		case UserAction::aiBlack:
+			board.setDefaultGame();
+			selectedPiece = nullopt;
+			ai = model::Piece::Color::black;
+			message = "Game reset with AI enabled as black.";
+			view::updateBoardString(board);
+			break;
+		}
 	}
 
-	vector<Piece::Position> getSelectedPieceMoves(const optional<Piece::Position>& selectedPiece, const vector<Move>& availableMoves) {
-		vector<Piece::Position> result;
+	optional<int> getAlgebraicNotationMove(const string& input, const model::Board& board) {
+		if (input.size() != 2) throw std::logic_error("invalid input size");
+
+		optional<int> optMoveIndex = nullopt;
+
+		auto availableMoves = board.getAvailableMoves();
+		for (int i = 0; i < availableMoves.size(); ++i) {
+			if (availableMoves[i].to.x == input[0] &&
+				'0' + availableMoves[i].to.y == input[1])
+			{
+				if (!optMoveIndex) optMoveIndex = i;
+				else return nullopt;
+			}
+		}
+
+		return optMoveIndex;
+	}
+
+	optional<int> getAlgebraicNotationPrefixMove(const string& input, const model::Board& board) {
+		if (input.size() != 3) throw std::logic_error("invalid input size");
+
+		unordered_set<model::Piece::Position> possibleFroms;
+		for (const auto& [notation, color, position] : board.getPieces()) {
+			if (tolower(notation) == input[0] && color == board.getCurrentTurn()) possibleFroms.emplace(position);
+		}
+
+		optional<int> optMoveIndex = nullopt;
+
+		auto availableMoves = board.getAvailableMoves();
+		for (int i = 0; i < availableMoves.size(); ++i) {
+			if (possibleFroms.find(availableMoves[i].from) != possibleFroms.end() &&
+				availableMoves[i].to.x == input[1] &&
+				'0' + availableMoves[i].to.y == input[2])
+			{
+				if (!optMoveIndex) optMoveIndex = i;
+				else return nullopt;
+			}
+		}
+
+		return optMoveIndex;
+	}
+
+	optional<int> getAlgebraicNotationCaptureMove(const string& input, const model::Board& board) {
+		if (input.size() != 2) throw std::logic_error("invalid input size");
+
+		unordered_set<model::Piece::Position> possibleFroms;
+		unordered_set<model::Piece::Position> possibleTos;
+		for (const auto& [notation, color, position] : board.getPieces()) {
+			if (tolower(notation) == input[0] && color == board.getCurrentTurn()) possibleFroms.emplace(position);
+			if (color != board.getCurrentTurn()) possibleTos.emplace(position);
+		}
+
+		optional<int> optMoveIndex = nullopt;
+		auto availableMoves = board.getAvailableMoves();
+		for (int i = 0; i < availableMoves.size(); ++i) {
+			if (possibleFroms.find(availableMoves[i].from) != possibleFroms.end() &&
+				possibleTos.find(availableMoves[i].to) != possibleTos.end())
+			{
+				if (!optMoveIndex) optMoveIndex = i;
+				else return nullopt;
+			}
+		}
+
+		return optMoveIndex;
+	}
+
+	optional<int> getAlgebraicNotationPrefixCaptureMove(const string& input, const model::Board& board) {
+		if (input.size() != 3) throw std::logic_error("invalid input size");
+
+		unordered_set<model::Piece::Position> possibleFroms;
+		unordered_set<model::Piece::Position> possibleTos;
+		for (const auto& [notation, color, position] : board.getPieces()) {
+			if (tolower(notation) == input[0] && color == board.getCurrentTurn()) possibleFroms.emplace(position);
+			if (tolower(notation) == input[2] && color != board.getCurrentTurn()) possibleTos.emplace(position);
+		}
+
+		optional<int> optMoveIndex = nullopt;
+		auto availableMoves = board.getAvailableMoves();
+		for (int i = 0; i < availableMoves.size(); ++i) {
+			if (possibleFroms.find(availableMoves[i].from) != possibleFroms.end() &&
+				possibleTos.find(availableMoves[i].to) != possibleTos.end())
+			{
+				if (!optMoveIndex) optMoveIndex = i;
+				else return nullopt;
+			}
+		}
+
+		return optMoveIndex;
+	}
+
+	optional<int> getKingsideCastlingMove(const model::Board& board) {
+		optional<int> optMoveIndex = nullopt;
+
+		vector<model::Piece::Position> kings;
+		for (const auto& [notation, color, position] : board.getPieces()) {
+			if (board.getCurrentTurn() == color && tolower(notation) == 'k') {
+				kings.push_back(position);
+			}
+		}
+		auto moves = board.getAvailableMoves();
+		for (int i = 0; i < moves.size(); ++i) {
+			if (std::find(kings.begin(), kings.end(), moves[i].from) != kings.end() && moves[i].to.x == moves[i].from.x + 2) {
+				if (!optMoveIndex) optMoveIndex = i;
+				else return nullopt;
+			}
+		}
+
+		return optMoveIndex;
+	}
+
+	optional<int> getQueensideCastlingMove(const model::Board& board) {
+		optional<int> optMoveIndex = nullopt;
+
+		vector<model::Piece::Position> kings;
+		for (const auto& [notation, color, position] : board.getPieces()) {
+			if (board.getCurrentTurn() == color && tolower(notation) == 'k') {
+				kings.push_back(position);
+			}
+		}
+		auto moves = board.getAvailableMoves();
+		for (int i = 0; i < moves.size(); ++i) {
+			if (std::find(kings.begin(), kings.end(), moves[i].from) != kings.end() && moves[i].to.x == moves[i].from.x - 2) {
+				if (!optMoveIndex) optMoveIndex = i;
+				else return nullopt;
+			}
+		}
+
+		return optMoveIndex;
+	}
+
+	UserAction parseInput(string& input, const model::Board& board) {
+		for (auto& inputChar : input) inputChar = tolower(inputChar);
+
+		if (input.size() == 2 && std::isalpha(input[0]) && std::isdigit(input[1])) return UserAction::indicatePosition;
+		if ((input.size() == 3 && std::isalpha(input[0]) && std::isalpha(input[1]) && isdigit(input[2])) ||
+			(input.size() == 2 && std::isalpha(input[0]) && input[1] == 'x') || // TODO: implement 
+			(input.size() == 3 && std::isalpha(input[0]) && input[1] == 'x' && isalpha(input[2])) ||
+			(input == "00" || input == "0-0" || input == "oo" || input == "o-o") ||
+			(input == "000" || input == "0-0-0" || input == "ooo" || input == "o-o-o")) return UserAction::algebraicNotation;
+		if (input == "c" || input == "cancel") return deselectPiece;
+		if (input == "r" || input == "reset") return UserAction::reset;
+		if (input == "ai-white") return UserAction::aiWhite;
+		if (input == "ai-black") return UserAction::aiBlack;
+		if (input == "a" || input == "available") return UserAction::availableMoves;
+		if (input == "h" || input == "help") return UserAction::help;
+		if (input == "e" || input == "exit") return UserAction::exitGame;
+
+		return UserAction::invalidAction;
+	}
+
+	vector<model::Piece::Position> getSelectedPieceMoves(const optional<model::Piece::Position>& selectedPiece, const vector<model::Move>& availableMoves) {
+		vector<model::Piece::Position> result;
 		if (selectedPiece) {
-			for (const Move& move : availableMoves) {
+			for (const model::Move& move : availableMoves) {
 				if (move.from == selectedPiece) {
 					result.push_back(move.to);
 				}
@@ -276,54 +339,52 @@ namespace {
 }
 
 namespace chess {
+
 	void play() {
-		string input = "";
-		while (std::cin && input != "exit") {
+		string input;
+		UserAction userAction = invalidAction;
+		while (std::cin && userAction != UserAction::exitGame) {
+			model::Board board;
+			optional<model::Piece::Position> selectedPiece = nullopt;
+			optional<model::Piece::Color> ai = nullopt;
 
-			Board board;
+			vector<model::Piece::Position> selectedPieceMoves = { };
+			view::updateBoardString(board);
 
-			optional<Piece::Position> selectedPiece = nullopt;
-			optional<Piece::Color> ai = nullopt;
-
-			vector<Piece::Position> selectedPieceMoves = { };
-			updateBoardString(board);
-
-			string message = "\"You may begin. Enter 'help' for a list of commands.\"";
+			string message = "Game start. Enter 'help' for a list of commands.";
 			while (std::cin && !board.getAvailableMoves().empty()) {
 				if (ai && *ai == board.getCurrentTurn()) {
 					board.makeMove(chess::ai::getMove(board));
 					message = "AI move complete.";
 				}
 				else {
-					bool inputValid = false;
 					do {
-						printHeader();
-						printCurrentTurn(board);
-						printBoardString();
-						printMessage(message);
-						input = promptUser();
+						view::printHeader();
+						view::printCurrentTurn(board);
+						view::printBoardString();
+						view::printMessage(message);
+						input = view::promptUser();
 
-						if (input == "exit") return;
-						inputValid = parseInput(input, message, selectedPiece, ai, board);
-					} while (std::cin && !inputValid);
+						userAction = parseInput(input, board);
+						processUserAction(userAction, input, board, selectedPiece, ai, message);
+					} while (std::cin && userAction != exitGame);
 				}
 
 				selectedPieceMoves = getSelectedPieceMoves(selectedPiece, board.getAvailableMoves());
-				updateBoardString(board, selectedPieceMoves);
+				view::updateBoardString(board, selectedPieceMoves);
 			}
 
-			printHeader();
+			view::printHeader();
 			if (board.pieceToCaptureInCheck(board.getCurrentTurn())) {
-				if (board.getCurrentTurn() == Piece::Color::white) printMessage("Black Wins!");
-				else /*board.getCurrentTurn() == Piece::Color::black*/ printMessage("White Wins!");
+				if (board.getCurrentTurn() == model::Piece::Color::white) view::printMessage("Black Wins!");
+				else /*board.getCurrentTurn() == Piece::Color::black*/ view::printMessage("White Wins!");
 			}
 			else {
-				printMessage("Stalemate!");
+				view::printMessage("Stalemate!");
 			}
-			printBoardString();
-			printMessage("\"Thanks for playing!\"");
-			printMessage("Press enter to start a new game.");
-			promptUser();
+			view::printBoardString();
+			view::printMessage("Thanks for playing! Press enter to start a new game.");
+			view::promptUser();
 		}
 	}
 }
