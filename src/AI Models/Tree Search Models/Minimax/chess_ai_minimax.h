@@ -10,7 +10,7 @@
 
 namespace chess::ai {
 
-	enum class Difficulty { random, easy, medium, hard};
-	int getMove(const chess::model::Board&, Difficulty = Difficulty::medium);
+	MinimaxResult minimax(const model::Board&, const model::Piece::Color& maximizingPlayer, const int& depth);
+	MinimaxResult multithreadingMinimax(const model::Board&, const model::Piece::Color& maximizingPlayer, const int& depth);
 
 }
